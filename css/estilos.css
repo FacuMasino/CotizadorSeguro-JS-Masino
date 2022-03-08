@@ -1,0 +1,19 @@
+body {
+	background-color: #E5E5E5;
+}
+
+#navMenu {
+	background-color: #3154AF;
+}
+
+#heroHeader {
+	height: 30vh;
+	background-image: url(../assets/img/headerImg.jpg);
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: right;
+}
+
+#heroHeader img{
+	object-fit: contain;
+}
