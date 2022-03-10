@@ -1,3 +1,22 @@
+// Coberturas disponibles
+const products = [
+	{
+		code: 'RC',
+		name: 'Responsabilidad Civil',
+		rate: 0,
+	},
+	{
+		code: 'TC',
+		name: 'Tercero Completo',
+		rate: 0.0055,
+	},
+	{
+		code: 'TR',
+		name: 'Todo Riesgo',
+		rate: 0.017,
+	},
+]
+
 class Person {
 	constructor(name,age) {
 		this.name = name;
@@ -24,41 +43,29 @@ class Quotation {
 		this.product = product;
 	}
 
-	Quote() {
+	quote() {
 		let policy_Prime;
 		let total_Prime;
 		let Quotation_Result = [];
-		for(let i = 0; i <= this.product.length-1; i++) {
-			switch(this.product[i]){
-				case 'TR':
-					policy_Prime = policyPrime(FULL_COVERAGE_RATE, this.car.amount,this.car.automaticAdjustment);
-					total_Prime = totalPrime(policy_Prime, this.car.gnc, this.car.commercialUse,this.person.age);
-					Quotation_Result.push({
-						coverageCode: 'TR',
-						description: 'Todo Riesgo',
-						premium: totalPremium(total_Prime).toFixed(0),
-						installments: (premium/6).toFixed(0),
-					});
-					break;
-				case 'TC':
-					policy_Prime = policyPrime(MEDIUM_COVERAGE_RATE, this.car.amount,this.car.automaticAdjustment);
-					total_Prime = totalPrime(policy_Prime, this.car.gnc, this.car.commercialUse,this.person.age);
-					Quotation_Result.push({
-						coverageCode: 'TC',
-						description: 'Tercero Completo',
-						premium: totalPremium(total_Prime).toFixed(0),
-						installments: (premium/6).toFixed(0),
-					});
-					break;
+		this.product.forEach(prod => {
+				policy_Prime = policyPrime(prod.rate, this.car.amount,this.car.automaticAdjustment);
+				total_Prime = totalPrime(policy_Prime, this.car.gnc, this.car.commercialUse,this.person.age);
+				Quotation_Result.push({
+					coverageCode: prod.code,
+					name: prod.name,
+					premium: totalPremium(total_Prime).toFixed(0),
+					installments: (premium/6).toFixed(0),
+				});
 			}
-		}
+		)
+
 		return Quotation_Result;
 	}
+	
+	getProductsStr() {
+		return this.product.map(prod => prod.name).toString();
+	}
 }
-
-// Tarifas de cobertuars
-const FULL_COVERAGE_RATE = 0.017;
-const MEDIUM_COVERAGE_RATE = 0.0045;
 
 // Recargos y descuentos
 const commercialUseDiscount = (price) => price * -0.05;
@@ -76,10 +83,11 @@ function ageCharge(age, price){
 // Calcular prima base de póliza
 // El ajuste automático mínimo es 15%
 function policyPrime(productRate, carAmount, automaticAdjustment = 0.15) {
-	const EXPENSES_RATE = 0.008; // Porcentaje para gastos de administración y producción
-	const PRIME_RATE = EXPENSES_RATE + productRate; // Prima de tarifa
-	
-	return PRIME_RATE * (carAmount+(carAmount*automaticAdjustment));
+	const EXPENSES_RATE = 1500; // Costos de producción
+	const RC_BASE = 5000; // Costo base Responsabilidad Civil
+	const PRIME_RATE = (carAmount+(carAmount*automaticAdjustment)) * productRate; // Prima de tarifa, para RC es 0
+
+	return PRIME_RATE + EXPENSES_RATE + RC_BASE;
 }
 
 // Calcular prima con cargos adicionales
@@ -112,9 +120,9 @@ function totalPremium(totalPrime){
 // Prueba
 const auto = new Car("Volkswagen", "GOL 4P - 1.6", "2012", 1080000,0.2, false,false);
 const cliente = new Person("Facundo", 26);
-const cotizacion = new Quotation(cliente,auto,["TR", "TC"]);
+const cotizacion = new Quotation(cliente,auto,products);
 
-const coberturas = cotizacion.Quote();
+const coberturas = cotizacion.quote();
 
 console.log(`Cliente: ${cotizacion.person.name}
 Marca: ${cotizacion.car.brand}
@@ -124,8 +132,8 @@ Suma Asegurada: ${cotizacion.car.amount}
 Ajuste automático: ${cotizacion.car.automaticAdjustment*100}%
 Uso: ${cotizacion.car.commercialUse ? 'Comercial':'Particular'}
 GNC: ${cotizacion.car.gnc ? 'Sí':'No'}
-Coberturas: ${cotizacion.product}`);
+Coberturas: ${cotizacion.getProductsStr()}\n`);
 
 for(let i = 0; i <= coberturas.length - 1; i++){
-	console.log(`${coberturas[i].coverageCode} - ${coberturas[i].description} \nTotal: $ ${coberturas[i].premium} \n6x $ ${coberturas[i].installments}`);
+	console.log(`${coberturas[i].coverageCode} - ${coberturas[i].name} \nTotal: $ ${coberturas[i].premium} \n6x $ ${coberturas[i].installments}\n`);
 }
