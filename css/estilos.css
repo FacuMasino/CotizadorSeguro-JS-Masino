@@ -17,3 +17,7 @@ body {
 #heroHeader img{
 	object-fit: contain;
 }
+
+#quotation-list div:nth-child(n+2) {
+	border-top: none !important;
+}

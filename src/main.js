@@ -244,32 +244,51 @@ function getCoverages() {
 }
 
 function quoteAndShow(vehicle, client, paymentType, products) {
-    const clientVehicle = new Car(vehicle.brand, vehicle.model, vehicle.year, vehicle.amount, 0.3, false, false);
+    const clientVehicle = new Car(vehicle.brand, vehicle.model, vehicle.year, vehicle.amount, 0.3, false,false);
     const clientData = new Person(client[0], client[1]);
     const clientCoverages = products;
     const quotation = new Quotation(clientData, clientVehicle, clientCoverages, paymentTypes[paymentType - 1]);
     const coverages = quotation.quote();
 
+    let htmlQuotationData = `
+        <div class="col-4 border rounded-start m-1 p-3">
+            <p class="m-0"><span class="fw-bold">Marca:</span> ${quotation.car.brand}</p>
+            <p class="m-0"><span class="fw-bold">Modelo:</span> ${quotation.car.model}</p>
+            <p class="m-0"><span class="fw-bold">Año:</span> ${quotation.car.year} </p>
+            <p class="m-0"><span class="fw-bold">S.A:</span> ${quotation.car.amount}</p>
+        </div>
+        <div class="col-4 border rounded-end text-rigth m-1 p-3">
+            <p class="m-0"><span class="fw-bold">Combustible adicional:</span>${quotation.car.gnc ? 'GNC':'No'}</p>
+            <p class="m-0"><span class="fw-bold">Uso:</span> ${quotation.car.commercialUse ? 'Comercial':'Particular'}</p>
+            <p class="m-0"><span class="fw-bold">Ajuste:</span> ${quotation.car.automaticAdjustment*100}%</p>
+        </div>
+        <div class="col-4 border rounded-end text-rigth m-1 p-3">
+            <p class="m-0"><span class="fw-bold">Cliente:</span> ${quotation.person.name}</p>
+            <p class="m-0"><span class="fw-bold">Edad:</span> ${quotation.person.age}</p>
+            <p class="m-0"><span class="fw-bold">Forma de pago:</span> ${paymentType === 3 ? 'Débito/Crédito':'Efectivo'}</p>
+            <p class="m-0"><span class="fw-bold">Cuotas:</span> ${paymentType === 2 ? '1':'6'}</p>
+        </div>
+    `;
 
-    console.group('%cCOTIZACIÓN','background-color: #3154AF; font-weigth: bold; color: white;');
-    console.log(`\
-    Cliente: ${quotation.person.name}\
-    \nMarca: ${quotation.car.brand}\
-    \nModelo: ${quotation.car.model}\
-    \nAño: ${quotation.car.year}\
-    \nSuma Asegurada: ${quotation.car.amount}\
-    \nAjuste automático: ${quotation.car.automaticAdjustment * 100}%\
-    \nUso: ${quotation.car.commercialUse ? 'Comercial' : 'Particular'}\
-    \nGNC: ${quotation.car.gnc ? 'Sí' : 'No'}\
-    \nCoberturas: ${quotation.getProductsStr()}\n`
-    );
+    let htmlProductList = "";
+    coverages.forEach(product => { 
+        htmlProductList += `
+            <div class="d-flex align-items-center border-top border-bottom border-dark p-2">
+            <div class="col-8">
+                <p class="m-0 fw-bold">${product.coverageCode} - ${product.name}</p>
+                <p class="m-0">${product.name}</p>
+            </div>
+            <div class="col-4 text-end">
+                <p class="m-0 fw-bold">${quotation.paymentType.installments}x $ ${product.installments}</p>
+            </div>
+            </div>
+        `;
+    });
 
-    for (let i = 0; i <= coverages.length - 1; i++) {
-        console.group(`%c${coverages[i].coverageCode} - ${coverages[i].name} `,'background-color: #3154AF; font-weigth: bold; color: white;');
-        console.log(`Total: $ ${coverages[i].premium} \n${quotation.paymentType.installments}x $ ${coverages[i].installments}\n`);
-        console.groupEnd();
-    }
-    console.groupEnd();
+    console.log(`Cotización realizada con éxito. \nCoberturas elegidas: ${quotation.getProductsStr()}`);
+    document.getElementById('quotation-data').innerHTML = htmlQuotationData;
+    document.getElementById('quotation-list').innerHTML = htmlProductList;
+
 }
 
 // Pedir y validar datos
