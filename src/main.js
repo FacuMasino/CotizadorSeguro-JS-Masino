@@ -180,7 +180,7 @@ function getVehicle() {
     ]
     const vehicleStrList = vehicles.map((vh, index) => `\n ${(index + 1)}. ${vh.brand} - ${vh.model} - ${vh.year}`).join('');
     const vehicle = parseInt(prompt(`Por favor seleccione un vehículo: ${vehicleStrList}`));
-    if (vehicle !== null && !isNaN(vehicle) && vehicle !== 0) {
+    if (vehicle !== null && !isNaN(vehicle) && vehicle !== 0 && vehicle <= 3) {
         return vehicles[vehicle - 1];
     } else {
         return []; // Ingresó mal el dato, devuelve array vacío
