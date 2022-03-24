@@ -1,14 +1,4 @@
 
-// Funcion validar(e, callbacks)
-// la funcion recibe el evento target, obtiene el id y según el id sabe que validar
-// recibe una función para el callback, la cual debe ejecutar en caso de ser correcta la validación
-
-// Función collapseShow(parametro)
-// funcion callback de validar, para mostrar el siguiente collapse
-
-// Enable field only if the previous is valid !!!
-// Enable button only if all fields are valid !!!
-
 function isValid(fieldId) {
     const DOMById = (elId) => document.getElementById(elId);
 
@@ -116,9 +106,6 @@ vehicleYearEvents.addEventListener('input', () => paintField(isValid('vehicleYea
 const vehicleAmountEvents = document.getElementById('vehicleAmount');
 vehicleAmountEvents.addEventListener('input', () => paintField(isValid('vehicleAmount'), vehicleAmountEvents));
 
-// -------------------------------------------------------------- //
-// ------------------Simulación de cotización-------------------- //
-// -------------------------------------------------------------- //
 
 // Definición de formas de pago
 const paymentCash = new PaymentType('Cash',6,0);
