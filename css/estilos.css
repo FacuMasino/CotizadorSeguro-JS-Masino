@@ -21,3 +21,11 @@ body {
 #quotation-list div:nth-child(n+2) {
 	border-top: none !important;
 }
+
+.accordion-header > button:disabled {
+	background-color: #ccc;
+}
+
+.accordion-header > button:enabled {
+	background-color: #fff;
+}

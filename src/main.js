@@ -1,255 +1,167 @@
-class Person {
-    constructor(name, age) {
-        this.name = name;
-        this.age = age;
+
+// Funcion validar(e, callbacks)
+// la funcion recibe el evento target, obtiene el id y según el id sabe que validar
+// recibe una función para el callback, la cual debe ejecutar en caso de ser correcta la validación
+
+// Función collapseShow(parametro)
+// funcion callback de validar, para mostrar el siguiente collapse
+
+// Enable field only if the previous is valid !!!
+// Enable button only if all fields are valid !!!
+
+function isValid(fieldId) {
+    const DOMById = (elId) => document.getElementById(elId);
+
+    switch (fieldId) {
+        case 'clientName':
+            const clientName = DOMById('clientName').value.trim().replace(' ','');
+            if(clientName.split('').some(char => char.toLowerCase() == char.toUpperCase())) return false;
+            if(clientName.length < 3) return false;
+            if(clientName.split('').some(char => !isNaN(parseInt(char)))) return false;
+            return true;
+        case 'clientAge':
+            const clientAge = Number(DOMById('clientAge').value.trim());
+            if(isNaN(clientAge)) return false;
+            if(clientAge < 17) return false;
+            if(clientAge > 85) return false;
+            return true;
+        case 'vehicleBrand':
+            const vehicleBrand = DOMById('vehicleBrand').value.trim().replace(' ','');
+            if(vehicleBrand.split('').some(char => char.toLowerCase() == char.toUpperCase())) return false;
+            if(vehicleBrand.length < 3) return false;
+            if(vehicleBrand.split('').some(char => !isNaN(parseInt(char)))) return false;
+            return true;
+        case 'vehicleYear':
+            const vehicleYear = Number(DOMById('vehicleYear').value.trim());
+            if(isNaN(vehicleYear)) return false;
+            if(vehicleYear < 2012) return false;
+            if(vehicleYear > 2022) return false;
+            return true;
+        case 'vehicleModel':
+            const vehicleModel = DOMById('vehicleModel').value.trim();
+            if(vehicleModel.toLowerCase() == vehicleModel.toUpperCase()) return false;
+            if(vehicleModel.length < 5) return false;
+            return true;
+        case 'vehicleAmount':
+            const vehicleAmount = Number(DOMById('vehicleAmount').value.trim());
+            if(isNaN(vehicleAmount)) return false;
+            if(vehicleAmount < 100000) return false;
+            return true;
     }
 }
 
-// Clase "auto" con las propiedades de cada vehículo
-class Car {
-    constructor(brand, model, year, amount, automaticAdjustment, commercialUse = false, gnc = false) {
-        this.brand = brand;
-        this.model = model;
-        this.year = year;
-        this.amount = parseInt(amount);
-        this.automaticAdjustment = parseFloat(automaticAdjustment);
-        this.gnc = gnc;
-        this.commercialUse = commercialUse;
+function validateClientData() {
+    return isValid('clientName') && isValid('clientAge') ? true : false;
+}
+
+function validateVehicleData() {
+    const fields = ['vehicleBrand', 'vehicleYear', 'vehicleModel', 'vehicleAmount'];
+    if(fields.some(field => !isValid(field))) return false;
+    return true;
+}
+
+function nextStep(isValid, collapseId, actualCollapseId) {
+    if(isValid){
+        // Si hubo un error, ocultar mensaje
+        const alertMsg = document.getElementById('alert-'+actualCollapseId);
+        if(alertMsg.innerHTML !== '') alertMsg.innerHTML = '';
+        // Deshabiliar etapa actual
+        document.getElementById('btn-'+actualCollapseId).disabled = true;
+        // Ir a la siguiente etapa
+        showStep(collapseId)
+    } else {
+        showAlert('Los datos ingresados son inválidos, por favor revisalos.','danger','alert-' + actualCollapseId)
     }
 }
 
-/* Clase Producto, para ofrecer una nueva cobertura
-debe instanciarse esta clase y sus propiedades */
-class Product {
-    constructor(code, name, rate) {
-        this.code = code;
-        this.name = name;
-        this.rate = rate; // Tarifa usada para calcular el costo en policyPrime()
+function showStep(collapseId) {
+    const collapse = document.getElementById(collapseId)
+    document.getElementById('btn-'+collapseId).disabled = false;
+    return new bootstrap.Collapse(collapse, {
+    toggle: true
+    });
+}
+
+function showAlert(msg, type, targetId){
+    const alertHTML = document.getElementById(targetId);
+    alertHTML.innerHTML = '<div class="alert alert-' + type + ' alert-dismissible" role="alert">' + msg + '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>';
+    alertHTML.scrollIntoView();
+}
+
+function paintField(isValid, fieldElement){
+    if(!isValid){
+        fieldElement.style.border = '1px solid red';
+    } else {
+        fieldElement.style.border = '1px solid green';
     }
 }
 
-class Quotation {
-    constructor(person, car, product, paymentType) {
-        this.person = person;
-        this.car = car;
-        this.product = product;
-        this.paymentType = paymentType;
-    }
+// Eventos en escucha
 
-    // Realiza la cotización de todas las coberturas que haya en 'product'
-    // Devuelve un objeto con el detalle y resultado de cada cobertura: código, nombre, premio y cuotas.
-    quote() {
-        let policy_Prime;
-        let total_Prime;
-        let Quotation_Result = [];
-        let premium;
-        this.product.forEach(prod => {
-            policy_Prime = policyPrime(prod.rate, this.car.amount, this.car.automaticAdjustment);
-            total_Prime = totalPrime(policy_Prime, this.car.gnc, this.car.commercialUse, this.person.age);
-            premium = totalPremium(total_Prime, this.paymentType).toFixed(0);
-            Quotation_Result.push({
-                coverageCode: prod.code,
-                name: prod.name,
-                premium: premium,
-                installments: (premium / this.paymentType.installments).toFixed(0),
-            });
-        }
-        )
-        return Quotation_Result;
-    }
+const clientNameEvents = document.getElementById('clientName');
+clientNameEvents.addEventListener('input', () => paintField(isValid('clientName'), clientNameEvents));
 
-    // Devuelve un String con las coberturas elegidas para cotizar
-    getProductsStr() {
-        return this.product.map(prod => prod.name).toString();
-    }
-}
+const clientAgeEvents = document.getElementById('clientAge');
+clientAgeEvents.addEventListener('input', () => paintField(isValid('clientAge'), clientAgeEvents));
 
-// Formas de pago
-const paymentTypes = [
-    {
-        method: 'Cash',
-        installments: 6,
-    },
-    {
-        method: 'Biannual',
-        installments: 1,
-    },
-    {
-        method: 'Automatic',
-        installments: 6,
-    },
-]
+const vehicleBrandEvents = document.getElementById('vehicleBrand');
+vehicleBrandEvents.addEventListener('input', () => paintField(isValid('vehicleBrand'), vehicleBrandEvents));
+
+const vehicleModelEvents = document.getElementById('vehicleModel');
+vehicleModelEvents.addEventListener('input', () => paintField(isValid('vehicleModel'), vehicleModelEvents));
+
+const vehicleYearEvents = document.getElementById('vehicleYear');
+vehicleYearEvents.addEventListener('input', () => paintField(isValid('vehicleYear'), vehicleYearEvents));
+
+const vehicleAmountEvents = document.getElementById('vehicleAmount');
+vehicleAmountEvents.addEventListener('input', () => paintField(isValid('vehicleAmount'), vehicleAmountEvents));
+
+// -------------------------------------------------------------- //
+// ------------------Simulación de cotización-------------------- //
+// -------------------------------------------------------------- //
+
+// Definición de formas de pago
+const paymentCash = new PaymentType('Cash',6,0);
+const paymentBiannual = new PaymentType('Biannual',1,-0.15);
+const paymentAuto = new PaymentType('Automatic',6,-0.05);
 
 // Definición de Coberturas
 const PRODUCT_RC = new Product('RC', 'Responsabilidad Civil', 0);
 const PRODUCT_TC = new Product('TC', 'Tercero Completo', 0.0055);
 const PRODUCT_TR = new Product('TR', 'Todo Riesgo', 0.017);
 
-// Recargos y descuentos
-// Devuelven un valor negativo o positivo según corresponda
-const commercialUseDiscount = (price) => price * -0.05;
-const gncCharge = (price) => price * 0.12;
-function ageCharge(age, price) {
-    if (age < 27) {
-        return price * 0.004;
-    } else if (age <= 50) {
-        return price * 0.001;
-    } else {
-        return price * 0.002;
+// falta agregar opcion en el formulario para elegir coberturas
+// falta agregar GNC y Uso seleccionado por el usuario
+function quoteAndShow(paymentType) {
+    const clientName = document.getElementById('clientName').value;
+    const clientAge = Number(document.getElementById('clientAge').value);
+    const vehicleBrand = document.getElementById('vehicleBrand').value;
+    const vehicleModel = document.getElementById('vehicleModel').value;
+    const vehicleYear = Number(document.getElementById('vehicleYear').value);
+    const vehicleAmount = Number(document.getElementById('vehicleAmount').value);
+
+    // habilitar y mostrar etapa de cotización
+    document.getElementById('btn-collapsePayment').disabled = true;
+    showStep('collapseQuotation');
+
+    switch (paymentType) {
+        case 1:
+            paymentType = paymentCash;
+            break;
+        case 2:
+            paymentType = paymentBiannual;
+            break;
+        case 3:
+            paymentType = paymentAuto;
+            break;
     }
-}
-function commercialDiscount(price, paymentType) {
-    if (paymentType.method === 'Biannual') {
-        // Descuento por pago semestral
-        return price * -0.15;
-    } else if (paymentType.method !== 'Cash') {
-        // Descuento por pago débito automático
-        return price * -0.05;
-    }
-    // Sin descuento, paga en efectivo y cuotas
-    return 0;
-}
 
-// Calcular prima base de póliza
-// El ajuste automático mínimo es 15%
-function policyPrime(productRate, carAmount, automaticAdjustment = 0.15) {
-    const EXPENSES_RATE = 1500; // Costos de producción
-    const RC_BASE = 5000; // Costo base Responsabilidad Civil
-    const PRIME_RATE = (carAmount + (carAmount * automaticAdjustment)) * productRate; // Prima de tarifa, para RC es 0
-
-    return PRIME_RATE + EXPENSES_RATE + RC_BASE;
-}
-
-// Calcular prima con cargos adicionales
-function totalPrime(policyPrime, gnc, commercialUse, age) {
-    let prime = policyPrime;
-    if (gnc) {
-        prime += gncCharge(policyPrime);
-    }
-    if (commercialUse) {
-        prime += commercialUseDiscount(policyPrime);
-    }
-    prime += ageCharge(age, policyPrime);
-
-    return prime;
-}
-
-// Calcular premio
-function totalPremium(totalPrime, paymentType) {
-    const COMPANY_FEE = 0.1; // tasa de la compañía
-    const SSN_FEE = 0.02; // tasa Superintendencia Nacional de seguros
-    const IVA_FEE = 0.21; // Impuesto IVA 21%
-
-    premium = (totalPrime + (totalPrime * COMPANY_FEE));
-    premium += premium * SSN_FEE;
-    premium += premium * IVA_FEE;
-
-    // Aplicar descuento según forma de pago
-    premium += commercialDiscount(premium, paymentType)
-
-    return premium;
-}
-
-// -------------------------------------------------------------- //
-// ------------------Simulación de cotización-------------------- //
-// -------------------------------------------------------------- //
-
-// Preguntar que vehículo va a cotizar
-function getVehicle() {
-    // Objeto con vehículos que se obtendrían de una base de datos actualizada
-    // Estos se muestran al cliente para que seleccione el que corresponda
-    const vehicles = [
-        {
-            brand: 'Volkswagen',
-            model: 'GOL 1.6 5P - TRENDLINE',
-            year: '2017',
-            amount: 800000,
-        },
-        {
-            brand: 'Ford',
-            model: 'FOCUS 2.0 4P - SE PLUS AT',
-            year: '2016',
-            amount: 1100000,
-        },
-        {
-            brand: 'Chevrolet',
-            model: 'ONIX 1.4 4P - JOY LS',
-            year: '2021',
-            amount: 2600000,
-        },
-    ]
-    const vehicleStrList = vehicles.map((vh, index) => `\n ${(index + 1)}. ${vh.brand} - ${vh.model} - ${vh.year}`).join('');
-    const vehicle = parseInt(prompt(`Por favor seleccione un vehículo: ${vehicleStrList}`));
-    if (vehicle !== null && !isNaN(vehicle) && vehicle !== 0 && vehicle <= 3) {
-        return vehicles[vehicle - 1];
-    } else {
-        return []; // Ingresó mal el dato, devuelve array vacío
-    }
-}
-
-// Preguntar nombre y edad
-function getClientData() {
-    const clientName = prompt('Por favor ingresá tu nombre:');
-    const clientAge = parseInt(prompt('Por favor ingresá tu edad (entre 17 y 85 años):'));
-    if (clientName === null) return false;
-    if (clientName.toLowerCase != clientName.toUpperCase && clientName.length > 3 && !isNaN(clientAge) && clientAge >= 17 && clientAge <= 85) {
-        return [clientName, clientAge];
-    } else {
-        return []; // Ingresó mal los datos, devuelve array vacío
-    }
-}
-
-// Preguntar forma de pago
-function getPaymentType() {
-    const paymentType = parseInt(prompt(`Seleccione una forma de pago preferida:\
-    \n1. Efectivo - 6 cuotas\n2. Efectivo - 1 pago semestral (-15%) \n3. Débito/Crédito Automático - 6 Cuotas (-5%)`));
-    if (!isNaN(paymentType) && paymentType >= 1 && paymentType <= 3) {
-        return [paymentType];
-    } else {
-        return []; // Ingresó mal el dato, devuelve array vacío
-    }
-}
-
-function getCoverages() {
-    let objCoverages = []; // array a devolver con las coberturas
-    const coverages = prompt(`Elija una o más coberturas separadas por comas (1,2):\
-    \n1. Todo Riesgo\
-    \n2. Tercero Completo\
-    \n3. Responsabilidad Civil`);
-
-    if (coverages === null) return [];
-    let arrCoverages = coverages.split(' ').join(''); // eliminar espacios
-    arrCoverages = arrCoverages.split(',') // lista con las opciones
-    if (arrCoverages.length > 3) return []; // no más de 3 opciones
-    arrCoverages = arrCoverages.map(option => Number(option)) // tratar de convertir a numero
-
-    // validar que todos sean numeros, distintos de 0 y menores a 3
-    if (arrCoverages.some(option => isNaN(option) || option > 3 || option == 0)) return [];
-
-    arrCoverages.forEach(option => {
-        switch (option) {
-            case 1:
-                objCoverages.push(PRODUCT_TR);
-                break;
-            case 2:
-                objCoverages.push(PRODUCT_TC);
-                break;
-            case 3:
-                objCoverages.push(PRODUCT_RC);
-                break;
-        }
-
-    });
-    return objCoverages; // si se cumple con todo, devolver coberturas
-}
-
-function quoteAndShow(vehicle, client, paymentType, products) {
-    const clientVehicle = new Car(vehicle.brand, vehicle.model, vehicle.year, vehicle.amount, 0.3, false,false);
-    const clientData = new Person(client[0], client[1]);
-    const clientCoverages = products;
-    const quotation = new Quotation(clientData, clientVehicle, clientCoverages, paymentTypes[paymentType - 1]);
+    const clientVehicle = new Car(vehicleBrand, vehicleModel, vehicleYear, vehicleAmount, 0.3, false,false);
+    const clientData = new Person(clientName, clientAge);
+    const clientCoverages = [PRODUCT_RC,PRODUCT_TC, PRODUCT_TR];
+    const quotation = new Quotation(clientData, clientVehicle, clientCoverages, paymentType);
     const coverages = quotation.quote();
-
+    
     let htmlQuotationData = `
         <div class="col-4 border rounded-start m-1 p-3">
             <p class="m-0"><span class="fw-bold">Marca:</span> ${quotation.car.brand}</p>
@@ -290,22 +202,3 @@ function quoteAndShow(vehicle, client, paymentType, products) {
     document.getElementById('quotation-list').innerHTML = htmlProductList;
 
 }
-
-// Pedir y validar datos
-/* Para el ejemplo y para evitar hacer tantos prompts solo se piden los datos más importantes.
-   GNC, tipo de uso y ajuste automático ya tienen un valor por defecto.
-*/
-do {
-    var retry;
-    const clientVehicle = getVehicle();
-    const clientData = getClientData();
-    const clientPaymentType = getPaymentType();
-    const clientCoverages = getCoverages();
-    if (clientVehicle.length != 0 && clientData.length != 0 && clientPaymentType.length != 0 && clientCoverages.length != 0) {
-        retry = false;
-        quoteAndShow(clientVehicle, clientData, clientPaymentType, clientCoverages);
-    } else {
-        retry = confirm('Alguno de los datos ingresados no poseen el formato correcto o son inválidos, desea volver a intentar?');
-        if (!retry) console.log('Cotización cancelada por el usuario.');
-    }
-} while (retry);
