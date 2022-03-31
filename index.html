@@ -11,6 +11,7 @@
 		integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
 	<link href="css/estilos.css" rel="stylesheet">
 	<!-- JavaScript -->
+	<script src="src/utils.js" defer></script>
 	<script src="src/quoter.js" defer></script>
 	<script src="src/main.js" defer></script>
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
@@ -69,10 +70,19 @@
 							<label for="clientAge" class="form-label">Cuál es tu edad?</label>
 							<div class="input-group mb-3">
 								<span class="input-group-text"><i class="fa-solid fa-calendar"></i></span>
-								<input type="text" id="clientAge" name="clientAge" class="form-control" placeholder="30"
-									aria-label="Edad del cliente">
+								<input type="number" min="17" max="85" id="clientAge" name="clientAge" class="form-control" placeholder="30"
+									aria-label="Edad del cliente" disabled>
 							</div>
-							<button type="button" class="btn btn-primary" onclick="nextStep(validateClientData(), 'collapseVehicle','collapseClient');">Continuar</button>
+							<div class="d-flex align-items-stretch justify-content-between">
+								<div>
+									<button id='btn-next-client' type="button" class="btn btn-primary" onclick="nextStep(validateClientData(), 'collapseVehicle','collapseClient');" disabled>Continuar</button>
+								</div>
+								<div>
+									<button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasHistory" aria-controls="offcanvasHistory">
+									Ver cotizaciones guardadas
+									</button>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -96,21 +106,27 @@
 							<label for="vehicleYear" class="form-label">De que año es?</label>
 							<div class="input-group mb-3">
 								<span class="input-group-text"><i class="fa-solid fa-calendar"></i></span>
-								<input type="text" id="vehicleYear" name="vehicleYear" class="form-control"
-									placeholder="2022" aria-label="Año del vehículo">
+								<input type="number" id="vehicleYear" name="vehicleYear" class="form-control"
+									placeholder="2022" aria-label="Año del vehículo" disabled>
 							</div>
 							<label for="vehicleModel" class="form-label">Modelo</label>
 							<div class="input-group mb-3">
 								<span class="input-group-text"><i class="fas fa-car-side"></i></span>
 								<input type="text" id="vehicleModel" name="vehicleModel" class="form-control"
-									placeholder="GOL 1.6 5P" aria-label="Modelo del vehículo">
+									placeholder="GOL 1.6 5P" aria-label="Modelo del vehículo" disabled>
 							</div>
 							<label for="vehicleAmount" class="form-label">Suma asegurada</label>
 							<div class="input-group mb-3">
 								<span class="input-group-text"><i class="fas fa-dollar-sign"></i></span>
-								<input type="text" id="vehicleAmount" name="vehicleAmount" class="form-control"
-									placeholder="1500000" aria-label="Suma asegurada del vehículo">
+								<input type="number" id="vehicleAmount" name="vehicleAmount" class="form-control"
+									placeholder="1500000" aria-label="Suma asegurada del vehículo" disabled>
 							</div>
+							<label for="vehicleAdjustment" class="form-label">Ajuste automático</label>
+							<select id="vehicleAdjustment" class="form-select mb-3" aria-label="Ajuste automático">
+								<option value="0.15">15%</option>
+								<option value="0.20">20%</option>
+								<option value="0.30">30%</option>
+							</select>
 							<label for="vehicleUsage" class="form-label">Tipo de uso</label>
 							<select id="vehicleUsage" class="form-select mb-3" aria-label="Tipo de uso">
 								<option value="1">Particular</option>
@@ -123,7 +139,8 @@
 									GNC
 								</label>
 							</div>
-							<button type="button" class="btn btn-primary" onclick="nextStep(validateVehicleData(), 'collapsePayment','collapseVehicle');">Continuar</button>
+							<button type="button" class="btn btn-primary" onclick="previousStep('collapseClient', 'collapseVehicle');">Volver</button>
+							<button id="btn-next-vehicle" type="button" class="btn btn-primary" onclick="nextStep(validateVehicleData(), 'collapsePayment','collapseVehicle');" disabled>Continuar</button>
 						</div>
 					</div>
 				</div>
@@ -193,6 +210,7 @@
 									</div>
 								</div>
 							</div>
+							<button type="button" class="btn btn-primary" onclick="previousStep('collapseVehicle', 'collapsePayment');">Volver</button>
 						</div>
 					</div>
 				</div>
@@ -281,8 +299,35 @@
 									</div>
 								</div>
 							</div>
+							<div class="d-flex m-1">
+								<button type="button" class="m-1 btn btn-primary" onclick="previousStep('collapsePayment', 'collapseQuotation');">Volver</button>
+								<button id="btn-offcanvasHistory" class="m-1 btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasHistory" aria-controls="offcanvasHistory">
+									Ver cotizaciones guardadas
+								</button>
+								<button type="button" class="m-1 btn btn-primary" onclick="saveQuotation();">Guardar</button>
+								<button type="button" class="m-1 btn btn-primary" onclick="createNewQuotation();">Nueva</button>
+							</div>
 						</div>
 					</div>
+				</div>
+			</div>
+		</div>
+		<div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasHistory" aria-labelledby="offcanvasHistoryLabel">
+			<div class="offcanvas-header">
+				<h5 class="offcanvas-title" id="offcanvasHistoryLabel">Historial</h5>
+				<button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+			</div>
+			<div class="offcanvas-body">
+				<div id="offcanvas-history" class="d-flex flex-column justify-content-between">
+					<div class="p-2 mb-1 fw-bold">Cotizaciones recientes</div>
+					<div id="offcanvas-history-list" class="list-group mb-2">
+						<p>No hay cotizaciones recientes</p>
+					</div>
+					<div id="offcanvas-saved" class="d-flex flex-column justify-content-between">
+						<div class="p-2 mb-1 fw-bold">Cotizaciones guardadas</div>
+						<div id="offcanvas-saved-list" class="list-group mb-2">
+							<p>No hay cotizaciones guardadas</p>
+						</div>
 				</div>
 			</div>
 		</div>

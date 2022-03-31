@@ -1,3 +1,9 @@
+:root {
+	--bs-primary: #3154AF;
+	--app-primary-dark: #294897;
+	--bs-primary-rgb: 49,84,175;
+}
+
 body {
 	background-color: #E5E5E5;
 }
@@ -28,4 +34,30 @@ body {
 
 .accordion-header > button:enabled {
 	background-color: #fff;
+}
+
+input:disabled{
+	border: 1px solid #ced4da !important;
+}
+
+.btn-history{
+	display:flex;
+	align-items: center;
+	justify-content: center;
+	background-color: var(--bs-primary);
+	color: #fff;
+	text-decoration: none;
+	height: 100%;
+}
+
+.btn-history:hover{
+	text-decoration: none;
+	color: #fff;
+	background-color: var(--app-primary-dark);
+}
+
+#offcanvas-history-list div:nth-child(n+2) {
+	border-top: none !important;
+	border-top-left-radius: 0 !important;
+	border-top-right-radius: 0 !important;
 }
