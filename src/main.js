@@ -151,7 +151,7 @@ function createNewQuotation() {
     
     const DOMById = (elId) => document.getElementById(elId);
 
-    // resetear todos los campos
+    // Resetear todos los campos
     const allFormElements = ['clientName','clientAge', 
     'vehicleBrand', 'vehicleYear', 'vehicleModel', 'vehicleAmount'];
 
@@ -160,6 +160,10 @@ function createNewQuotation() {
         DOMById(el).value = '';
         DOMById(el).style.border = '1px solid #ced4da'; // default bootstrap style
     });
+
+    DOMById('vehicleAdjustment').selectedIndex = 0
+    DOMById('vehicleUsage').selectedIndex = 0;
+    DOMById('vehicleGNC').checked = false;
 
     // Habilitar campo cliente y vehiculo para empezar desde 0
     DOMById('clientName').disabled = false;
@@ -175,23 +179,16 @@ function createNewQuotation() {
 }
 
 // Obtener nueva id
-function getNewStorageId(isLocal = false){
-    if(isLocal){
-        const lastId = getFromLocal('lastId');
-        if(lastId == null){
-            setToLocal('lastId',0)
-            return 0;
-        }
-        setToLocal('lastId',Number(lastId)+1);
-        return Number(lastId)+1;
-    }
-    const lastId = getFromSession('lastId');
-    if(lastId == null){
-        setToSession('lastId',0);
+function getNewStorageId(isLocal = false) {
+    const lastId = isLocal ? parseInt(getFromLocal('lastId')):parseInt(getFromSession('lastId'));
+    const setId = isLocal ? (n)=>setToLocal('lastId',n):(n)=>setToSession('lastId',n);
+    if(isNaN(lastId)){
+        setId(0);
         return 0;
+    } else {
+        setId(lastId+1);
+        return lastId+1;
     }
-    setToSession('lastId',Number(lastId)+1)
-    return Number(lastId)+1;
 }
 
 // Guardar cotización y actualizar lista
@@ -201,13 +198,13 @@ function storeQuotation(quotation, isLocal = false) {
         if(!localQuotations) localQuotations = [];
         localQuotations.push(quotation);
         setToLocal('quotations',localQuotations);
-        renderSavedList();
+        renderQuotationsList(false, true);
     } else {
         let sessionQuotations = getFromSession('quotations') || false;
         if(!sessionQuotations) sessionQuotations = [];
         sessionQuotations.push(quotation);
         setToSession('quotations',sessionQuotations);
-        renderHistoryList();
+        renderQuotationsList(false, false);
     }
 }
 
@@ -221,7 +218,7 @@ function saveQuotation(){
         sessionQuotation = sessionQuotation[activeId];
         sessionQuotation.id = getNewStorageId(true);
         storeQuotation(sessionQuotation,true);
-        renderSavedList();
+        renderQuotationsList(false,true);
         // pasa a ser true porque la cotización actual está guardada en local
         // si vuelve a tocar guardar, no debe guardar una nueva
         setToSession('isEditing', true) 
@@ -231,118 +228,66 @@ function saveQuotation(){
 const getHistoryList = () => getFromSession('quotations') || false;
 const getSavedList = () => getFromLocal('quotations') || false;
 
-function renderSavedList(isUpdating = false) {
-    let quotations = getSavedList();
-    //console.log(quotations);
-    if (quotations){
+function renderQuotationsList(isUpdating,isLocal) {
+    // preguntar de donde obtenerlas, sesion o local
+    let quotations = isLocal ? getSavedList():getHistoryList();
+    const elementTarget = isLocal ? 'offcanvas-saved-list':'offcanvas-history-list';
+    const activeId = getFromSession('activeId');
+    // si hay guardadas, renderizarlas en el historial
+    if(quotations){
         let quotationsHTML = '';
-        if(isUpdating) {
-            quotations = quotations[quotations.length-1];
-            const newItem = document.createElement('button');
-            newItem.nodeType = 'button';
-            newItem.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-start';
-            newItem.setAttribute('onClick',`btnLoadQuotation(${quotations.id},true)`);
-            newItem.innerHTML = `
+        // Si isUpdating es true, significa que solo hay que renderizar 1 cotización
+        // Para evitar renderizar todo de nuevo, se selecciona y actualizar solo la seleccionada (activeId)
+        // El atributo data-quotation-id debe coincidir con "activeId"
+        if(isUpdating){
+            quotations = quotations[activeId];
+            quotationsHTML = `
                 <div class="my-1 me-auto">
                     <div class="fw-bold">${quotations.person.name}</div>
                     <div>${quotations.car.brand} ${quotations.car.model} ${quotations.car.year}</div>
                 </div>
                 <div class="my-1 align-self-stretch d-flex flex-column justify-content-between align-items-end">
-                    <span class="mb-1 badge bg-primary rounded-pill">Ver</span>
-                    <span class="badge bg-primary rounded-pill">
-                    ${quotations.paymentType.method == 'Automatic'?'Automático':'Efectivo'} -
-                    ${quotations.paymentType.installments == 6?'6 Cuotas':'1 cuota'}
-                    </span>
-                </div>
-            `;
-            document.getElementById('offcanvas-saved-list').lastElementChild.remove(); // Quitar ultima actualización
-            document.getElementById('offcanvas-saved-list').appendChild(newItem); // Reemplazar
-        } else {
-            quotations.forEach((item) => {
-                quotationsHTML += `
-                    <button type="button" onClick="btnLoadQuotation(${item.id},true)" class="list-group-item list-group-item-action d-flex justify-content-between align-items-start">
-                        <div class="my-1 me-auto">
-                            <div class="fw-bold">${item.person.name}</div>
-                            <div>${item.car.brand} ${item.car.model} ${item.car.year}</div>
-                        </div>
-                        <div class="my-1 align-self-stretch d-flex flex-column justify-content-between align-items-end">
-                            <span class="mb-1 badge bg-primary rounded-pill">Ver</span>
-                            <span class="badge bg-primary rounded-pill">
-                            ${item.paymentType.method ==  'Automatic'?'Automático':'Efectivo'} -
-                            ${item.paymentType.installments == 6?'6 Cuotas':'1 cuota'}
-                        </span>
-                    </button>
-                `;
-            })
-            document.getElementById('offcanvas-saved-list').innerHTML = quotationsHTML;
-        }
-    }
-}
-
-function renderHistoryList(isUpdating = false) {
-    let quotations = getHistoryList();
-    //console.log(quotations);
-    if (quotations){
-        let quotationsHTML = '';
-        if(isUpdating) {
-            quotations = quotations[quotations.length-1];
-            const newItem = document.createElement('button');
-            newItem.nodeType = 'button';
-            newItem.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-start';
-            newItem.setAttribute('onClick',`btnLoadQuotation(${quotations.id},false)`);
-            newItem.innerHTML = `
-                <div class="my-1 me-auto">
-                    <div class="fw-bold">${quotations.person.name}</div>
-                    <div>${quotations.car.brand} ${quotations.car.model} ${quotations.car.year}</div>
-                </div>
-                <div class="my-1 align-self-stretch d-flex flex-column justify-content-between align-items-end">
-                    <span class="mb-1 badge bg-primary rounded-pill">Ver</span>
-                    <span class="badge bg-primary rounded-pill">
+                    <span role="button" class="mb-1 badge bg-primary rounded-pill" onclick="btnLoadQuotation(${quotations.id},${isLocal})"><i class="far fa-edit"></i></span>
+                    <span class="badge bg-secondary rounded-pill">
                     ${quotations.paymentType.method ==  'Automatic'?'Automático':'Efectivo'} -
                     ${quotations.paymentType.installments == 6?'6 Cuotas':'1 cuota'}
-                    </span>
-                </div>
+                </span>
             `;
-            document.getElementById('offcanvas-history-list').lastElementChild.remove(); // Quitar ultima actualización
-            document.getElementById('offcanvas-history-list').appendChild(newItem); // Reemplazar
+            // Seleccionar la lista correspondiente
+            const listElement = document.getElementById(elementTarget);
+            // Seleccionar el item que coincida con el id y actualizarlo
+            listElement.querySelector(`[data-quotation-id="${quotations.id}"]`).innerHTML = quotationsHTML;
         } else {
             quotations.forEach((item) => {
                 quotationsHTML += `
-                    <button type="button" onClick="btnLoadQuotation(${item.id},false)" class="list-group-item list-group-item-action d-flex justify-content-between align-items-start">
+                    <li data-quotation-id="${item.id}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-start">
                         <div class="my-1 me-auto">
                             <div class="fw-bold">${item.person.name}</div>
                             <div>${item.car.brand} ${item.car.model} ${item.car.year}</div>
                         </div>
                         <div class="my-1 align-self-stretch d-flex flex-column justify-content-between align-items-end">
-                            <span class="mb-1 badge bg-primary rounded-pill">Ver</span>
-                            <span class="badge bg-primary rounded-pill">
+                            <span role="button" class="mb-1 badge bg-primary rounded-pill" onclick="btnLoadQuotation(${item.id},${isLocal})"><i class="far fa-edit"></i></span>
+                            <span class="badge bg-secondary rounded-pill">
                             ${item.paymentType.method ==  'Automatic'?'Automático':'Efectivo'} -
                             ${item.paymentType.installments == 6?'6 Cuotas':'1 cuota'}
                         </span>
-                    </button>
+                    </li>
                 `;
-            })
-            document.getElementById('offcanvas-history-list').innerHTML = quotationsHTML;
+            });
+            document.getElementById(elementTarget).innerHTML = quotationsHTML;
         }
     }
 }
 
-// Obtiene las cotizaciones guardadas en Session
+// Obtiene las cotizaciones guardadas en Storage
 // y sobre escribe la que tenga el mismo Id que el activo actualmente
-function updateHistoryList(quotationData){
-    let activeId = getFromSession('activeId');
-    let sessionQuotations = getFromSession('quotations');
-    sessionQuotations[activeId] = {id:activeId,...quotationData};
-    setToSession('quotations', sessionQuotations);
-    renderHistoryList(true);
-}
-
-function updateSavedList(quotationData) {
-    let activeId = getFromSession('activeId');
-    let localQuotations = getFromLocal('quotations');
-    localQuotations[activeId] = {id:activeId,...quotationData};
-    setToLocal('quotations', localQuotations);
-    renderSavedList(true);
+function updateQuotationsList(quotationData, isLocal){
+    const activeId = getFromSession('activeId');
+    const setToStorage = isLocal ? (data) => setToLocal('quotations',data) : (data)=>setToSession('quotations',data);
+    let quotations = isLocal ? getFromLocal('quotations') : getFromSession('quotations');
+    quotations[activeId] = {id:activeId,...quotationData};
+    setToStorage(quotations);
+    renderQuotationsList(true,isLocal);
 }
 
 // Al abrir la página obtiene la ultima cotización
@@ -362,15 +307,16 @@ function restoreLastQutation() {
 }
 
 function btnLoadQuotation(id,isLocal){
-    setToSession('activeId', Number(id));
+    // cambiar id activa por la de la cotización seleccionada
+    setToSession('activeId', Number(id)); 
     const quotation = isLocal ? getFromLocal('quotations') : getFromSession('quotations');
     if(isLocal) {
         setToSession('isEditing', true);
-        setToSession('NewQuotation', false);
+        setToSession('newQuotation', false);
         loadQuotation(quotation[Number(id)]);
     } else {
         setToSession('isEditing',false);
-        setToSession('NewQuotation', false)
+        setToSession('newQuotation', false)
         loadQuotation(quotation[Number(id)]);
     }
     // Ocultar historial
@@ -437,11 +383,11 @@ function handleStorage(quotationData){
         if(isEditing) {
             // Si está editandola es porque estaba guardada en local
             // Guardarla actualizada en local
-            updateSavedList(quotationData);
+            updateQuotationsList(quotationData,true);
         } else {
             // Si no significa que la tomó desde el historial
             // Guardarla actualizada en el historial
-            updateHistoryList(quotationData);
+            updateQuotationsList(quotationData,false);
         }
     }
 }
@@ -543,8 +489,8 @@ if(getFromSession('activeId') === null){
     setToSession('activeId',0);
 }
 // Recuperar historial de la sesión
-renderHistoryList();
+renderQuotationsList(false,false);
 // Recuperar el historial guardado
-renderSavedList();
+renderQuotationsList(false,true);
 // Recuperar ultima cotización
 restoreLastQutation();
