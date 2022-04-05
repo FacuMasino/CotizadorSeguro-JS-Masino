@@ -23,9 +23,10 @@ class Car {
 /* Clase Producto, para ofrecer una nueva cobertura
 debe instanciarse esta clase y sus propiedades */
 class Product {
-    constructor(code, name, rate) {
+    constructor(code, name, description, rate) {
         this.code = code;
         this.name = name;
+        this.description = description;
         this.rate = rate; // Tarifa usada para calcular el costo en policyPrime()
     }
 }
@@ -60,6 +61,7 @@ class Quotation {
             Quotation_Result.push({
                 coverageCode: prod.code,
                 name: prod.name,
+                description: prod.description,
                 premium: premium,
                 installments: (premium / this.paymentType.installments).toFixed(0),
             });

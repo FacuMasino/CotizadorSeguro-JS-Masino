@@ -14,14 +14,44 @@ body {
 
 #heroHeader {
 	height: 30vh;
-	background-image: url(../assets/img/headerImg.jpg);
-	background-size: contain;
-	background-repeat: no-repeat;
-	background-position: right;
+	position: relative;
 }
 
-#heroHeader img{
-	object-fit: contain;
+#heroHeader > div {
+	position: inherit;
+	z-index: 2;
+}
+
+#heroHeader .h1 {
+	text-shadow: -2px 1px 2px rgb(0 0 0 / 20%);
+}
+
+@media (max-width: 768px) {
+	#heroHeader:before {
+		content: '';
+		position: absolute;
+		display: block;
+		top: 0;
+		left: 0;
+		height: 100%;
+		width: 100%;
+		background-image: url(../assets/img/headerImg.jpg);
+		background-size: cover;
+		background-repeat: no-repeat;
+		background-position: 35% 65%;
+		background-blend-mode:difference;
+		opacity: 0.45;
+	}
+}
+
+@media (min-width: 768px) {
+	#heroHeader {
+		height: 30vh;
+		background-image: url(../assets/img/headerImg.jpg);
+		background-size: contain;
+		background-repeat: no-repeat;
+		background-position: right;
+	}
 }
 
 #quotation-list div:nth-child(n+2) {
@@ -40,24 +70,50 @@ input:disabled{
 	border: 1px solid #ced4da !important;
 }
 
-.btn-history{
-	display:flex;
-	align-items: center;
-	justify-content: center;
-	background-color: var(--bs-primary);
-	color: #fff;
-	text-decoration: none;
-	height: 100%;
-}
-
-.btn-history:hover{
-	text-decoration: none;
-	color: #fff;
-	background-color: var(--app-primary-dark);
-}
-
 #offcanvas-history-list div:nth-child(n+2) {
 	border-top: none !important;
 	border-top-left-radius: 0 !important;
 	border-top-right-radius: 0 !important;
+}
+
+.list-group-item.active {
+	background-color: var(--bs-primary);
+}
+
+.list-group-item.active > div > span.badge {
+	background-color: #fff !important;
+	color: var(--bs-primary);
+}
+
+.list-group-item.active > div > div > span.badge {
+	background-color: #fff !important;
+	color: var(--bs-primary);
+}
+
+/*  Modifica el botón cerrar de toastify
+	para que aparezca en la esquina superior
+	izquierda */
+.toast-close {
+	position: inherit !important;
+	right: 2px;
+	top: 2px;
+	padding: 0;
+}
+
+.toast-info {
+	background: linear-gradient(135deg, #73a5ff, #5477f5);
+}
+
+.toast-success {
+	background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0));
+	background-color: rgb(5,135,84);
+}
+
+.toast-danger {
+	background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0));
+	background-color: rgb(220,53,69);
+}
+
+.toastify {
+	padding: 12px 30px 12px 12px;
 }

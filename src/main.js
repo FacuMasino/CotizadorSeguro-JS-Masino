@@ -1,153 +1,39 @@
-// Validaciones
-function isValid(fieldId) {
-    const DOMById = (elId) => document.getElementById(elId);
-
-    switch (fieldId) {
-        case 'clientName':
-            const clientName = DOMById('clientName').value.trim().replace(' ','');
-            if(clientName.split('').some(char => char.toLowerCase() == char.toUpperCase())) return false;
-            if(clientName.length < 3) return false;
-            if(clientName.split('').some(char => !isNaN(parseInt(char)))) return false;
-            return true;
-        case 'clientAge':
-            const clientAge = Number(DOMById('clientAge').value.trim());
-            if(isNaN(clientAge)) return false;
-            if(clientAge < 17) return false;
-            if(clientAge > 85) return false;
-            return true;
-        case 'vehicleBrand':
-            const vehicleBrand = DOMById('vehicleBrand').value.trim().replace(' ','');
-            if(vehicleBrand.split('').some(char => char.toLowerCase() == char.toUpperCase())) return false;
-            if(vehicleBrand.length < 3) return false;
-            if(vehicleBrand.split('').some(char => !isNaN(parseInt(char)))) return false;
-            return true;
-        case 'vehicleYear':
-            const vehicleYear = Number(DOMById('vehicleYear').value.trim());
-            if(isNaN(vehicleYear)) return false;
-            if(vehicleYear < 2012) return false;
-            if(vehicleYear > 2022) return false;
-            return true;
-        case 'vehicleModel':
-            const vehicleModel = DOMById('vehicleModel').value.trim();
-            if(vehicleModel.toLowerCase() == vehicleModel.toUpperCase()) return false;
-            if(vehicleModel.length < 5) return false;
-            return true;
-        case 'vehicleAmount':
-            const vehicleAmount = Number(DOMById('vehicleAmount').value.trim());
-            if(isNaN(vehicleAmount)) return false;
-            if(vehicleAmount < 100000) return false;
-            return true;
-    }
-}
-
-function validateClientData() {
-    const fields = ['clientName', 'clientAge'];
-    let invalids = 0;
-    fields.forEach(field => {
-        if(!isValid(field)) {
-            // Borde rojo si algún campo es inválido
-            validateFieldEnableNext(false, document.getElementById(field));
-            invalids += 1;
-        }
-    })
-    if(invalids > 0) return false;
-    return true;
-}
-
-function validateVehicleData() {
-    const fields = ['vehicleBrand', 'vehicleYear', 'vehicleModel', 'vehicleAmount'];
-    //if(fields.some(field => !isValid(field))) return false;
-    let invalids = 0;
-    fields.forEach(field => {
-        if(!isValid(field)) {
-            validateFieldEnableNext(false, document.getElementById(field));
-            invalids += 1;
-        }
-    })
-    if(invalids > 0) return false;
-    return true;
-}
-
-function nextStep(isValid, collapseId, actualCollapseId) {
-    if(isValid){
-        // Si hubo un error, ocultar mensaje
-        const alertMsg = document.getElementById('alert-'+actualCollapseId);
-        if(alertMsg.innerHTML !== '') alertMsg.innerHTML = '';
-        // Deshabiliar etapa actual
-        document.getElementById('btn-'+actualCollapseId).disabled = true;
-        // Ir a la siguiente etapa
-        showStep(collapseId)
-    } else {
-        showAlert('Los datos ingresados son inválidos, por favor revisalos.','danger','alert-' + actualCollapseId)
-    }
-}
-
-function previousStep(prevCollapseId, actualCollapseId){
-    document.getElementById('btn-'+actualCollapseId).disabled = true;
-    showStep(prevCollapseId);
-}
-
-function showStep(collapseId) {
-    const collapse = document.getElementById(collapseId)
-    document.getElementById('btn-'+collapseId).disabled = false;
-    return new bootstrap.Collapse(collapse, {
-    toggle: true
-    });
-}
-
-function showAlert(msg, type, targetId){
-    const alertHTML = document.getElementById(targetId);
-    alertHTML.innerHTML = '<div class="alert alert-' + type + ' alert-dismissible" role="alert">' + msg + '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>';
-    alertHTML.scrollIntoView();
-}
-
-function validateFieldEnableNext(isValid, fieldElement, nextElement = ''){
-    if(!isValid){
-        fieldElement.style.border = '1px solid red';
-        if(nextElement != '') document.getElementById(nextElement).disabled = true;
-    } else {
-        fieldElement.style.border = '1px solid green';
-        if(nextElement != '') document.getElementById(nextElement).disabled = false;
-    }
-}
-
-// Eventos en escucha
-
-const clientNameEvents = document.getElementById('clientName');
-clientNameEvents.addEventListener('input', () => validateFieldEnableNext(isValid('clientName'), clientNameEvents,'clientAge'));
-
-const clientAgeEvents = document.getElementById('clientAge');
-clientAgeEvents.addEventListener('input', () => validateFieldEnableNext(isValid('clientAge'), clientAgeEvents,'btn-next-client'));
-
-const vehicleBrandEvents = document.getElementById('vehicleBrand');
-vehicleBrandEvents.addEventListener('input', () => validateFieldEnableNext(isValid('vehicleBrand'), vehicleBrandEvents,'vehicleYear'));
-
-const vehicleYearEvents = document.getElementById('vehicleYear');
-vehicleYearEvents.addEventListener('input', () => validateFieldEnableNext(isValid('vehicleYear'), vehicleYearEvents,'vehicleModel'));
-
-const vehicleModelEvents = document.getElementById('vehicleModel');
-vehicleModelEvents.addEventListener('input', () => validateFieldEnableNext(isValid('vehicleModel'), vehicleModelEvents,'vehicleAmount'));
-
-const vehicleAmountEvents = document.getElementById('vehicleAmount');
-vehicleAmountEvents.addEventListener('input', () => validateFieldEnableNext(isValid('vehicleAmount'), vehicleAmountEvents,'btn-next-vehicle'));
-
-
 // Definición de formas de pago
 const paymentCash = new PaymentType('Cash',6,0);
 const paymentBiannual = new PaymentType('Biannual',1,-0.15);
 const paymentAuto = new PaymentType('Automatic',6,-0.05);
 
 // Definición de Coberturas
-const PRODUCT_RC = new Product('RC', 'Responsabilidad Civil', 0);
-const PRODUCT_TC = new Product('TC', 'Tercero Completo', 0.0055);
-const PRODUCT_TR = new Product('TR', 'Todo Riesgo', 0.017);
+const PRODUCT_RC = new Product('RC', 'Responsabilidad Civil','Cobertura básica, no incluye asistencia', 0);
+const PRODUCT_TC = new Product('TC', 'Tercero Completo', 'Destrucción total/parcial por robo/incendio', 0.0055);
+const PRODUCT_TR = new Product('TR', 'Todo Riesgo', 'Todo riesgo con franquicia del 1% sobre suma asegurada', 0.017);
 
+function restoreLastQutation() {
+    const isEditing = getFromSession('isEditing');
+    const newQuotation = getFromSession('newQuotation');
+    const activeId = getFromSession('activeId');
+    // Si es falso se hizo una cotizacion previamente
+    // Podría haber quedado guardada en el historial o en local
+    if(!newQuotation){
+        // Si isEditing quedó true, lo ultimo que hizo al salir
+        // fue editar o cargar una de las cotizaciones guardads
+        // Si no obtener la ultima activa desde el historial
+        const quotations = isEditing ? getFromLocal('quotations') : getFromSession('quotations');
+        if(quotations) {
+            const indexOfActiveId =  quotations.indexOf(quotations.find((q)=> q.id == activeId));
+            loadQuotation(quotations[indexOfActiveId], isEditing);
+            enableActiveItem(activeId, isEditing);
+        }
+    }
+}
 
 function createNewQuotation() {
+    // Deshabilitar item activo
+    disableActiveItem();
     // Prepara storage para crear una nueva cotización
     setToSession('newQuotation', true);
     setToSession('isEditing',false);
-    setToSession('activeId', 0);
+    setToSession('activeId', null);
     
     const DOMById = (elId) => document.getElementById(elId);
 
@@ -165,6 +51,9 @@ function createNewQuotation() {
     DOMById('vehicleUsage').selectedIndex = 0;
     DOMById('vehicleGNC').checked = false;
 
+    // Resetear checkboxes coberturas
+    resetCoverages();
+
     // Habilitar campo cliente y vehiculo para empezar desde 0
     DOMById('clientName').disabled = false;
     DOMById('vehicleBrand').disabled = false;
@@ -178,154 +67,9 @@ function createNewQuotation() {
     showStep('collapseClient');
 }
 
-// Obtener nueva id
-function getNewStorageId(isLocal = false) {
-    const lastId = isLocal ? parseInt(getFromLocal('lastId')):parseInt(getFromSession('lastId'));
-    const setId = isLocal ? (n)=>setToLocal('lastId',n):(n)=>setToSession('lastId',n);
-    if(isNaN(lastId)){
-        setId(0);
-        return 0;
-    } else {
-        setId(lastId+1);
-        return lastId+1;
-    }
-}
-
-// Guardar cotización y actualizar lista
-function storeQuotation(quotation, isLocal = false) {
-    if(isLocal){
-        let localQuotations = getFromLocal('quotations') || false;
-        if(!localQuotations) localQuotations = [];
-        localQuotations.push(quotation);
-        setToLocal('quotations',localQuotations);
-        renderQuotationsList(false, true);
-    } else {
-        let sessionQuotations = getFromSession('quotations') || false;
-        if(!sessionQuotations) sessionQuotations = [];
-        sessionQuotations.push(quotation);
-        setToSession('quotations',sessionQuotations);
-        renderQuotationsList(false, false);
-    }
-}
-
-// Guarda en local la última cotización realizada por el usuario solo si
-// no está editando una guardada
-function saveQuotation(){
-    const isEditing = getFromSession('isEditing');
-    const activeId = getFromSession('activeId');
-    if(!isEditing) {
-        let sessionQuotation = getFromSession('quotations');
-        sessionQuotation = sessionQuotation[activeId];
-        sessionQuotation.id = getNewStorageId(true);
-        storeQuotation(sessionQuotation,true);
-        renderQuotationsList(false,true);
-        // pasa a ser true porque la cotización actual está guardada en local
-        // si vuelve a tocar guardar, no debe guardar una nueva
-        setToSession('isEditing', true) 
-    }
-}
-
-const getHistoryList = () => getFromSession('quotations') || false;
-const getSavedList = () => getFromLocal('quotations') || false;
-
-function renderQuotationsList(isUpdating,isLocal) {
-    // preguntar de donde obtenerlas, sesion o local
-    let quotations = isLocal ? getSavedList():getHistoryList();
-    const elementTarget = isLocal ? 'offcanvas-saved-list':'offcanvas-history-list';
-    const activeId = getFromSession('activeId');
-    // si hay guardadas, renderizarlas en el historial
-    if(quotations){
-        let quotationsHTML = '';
-        // Si isUpdating es true, significa que solo hay que renderizar 1 cotización
-        // Para evitar renderizar todo de nuevo, se selecciona y actualizar solo la seleccionada (activeId)
-        // El atributo data-quotation-id debe coincidir con "activeId"
-        if(isUpdating){
-            quotations = quotations[activeId];
-            quotationsHTML = `
-                <div class="my-1 me-auto">
-                    <div class="fw-bold">${quotations.person.name}</div>
-                    <div>${quotations.car.brand} ${quotations.car.model} ${quotations.car.year}</div>
-                </div>
-                <div class="my-1 align-self-stretch d-flex flex-column justify-content-between align-items-end">
-                    <span role="button" class="mb-1 badge bg-primary rounded-pill" onclick="btnLoadQuotation(${quotations.id},${isLocal})"><i class="far fa-edit"></i></span>
-                    <span class="badge bg-secondary rounded-pill">
-                    ${quotations.paymentType.method ==  'Automatic'?'Automático':'Efectivo'} -
-                    ${quotations.paymentType.installments == 6?'6 Cuotas':'1 cuota'}
-                </span>
-            `;
-            // Seleccionar la lista correspondiente
-            const listElement = document.getElementById(elementTarget);
-            // Seleccionar el item que coincida con el id y actualizarlo
-            listElement.querySelector(`[data-quotation-id="${quotations.id}"]`).innerHTML = quotationsHTML;
-        } else {
-            quotations.forEach((item) => {
-                quotationsHTML += `
-                    <li data-quotation-id="${item.id}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-start">
-                        <div class="my-1 me-auto">
-                            <div class="fw-bold">${item.person.name}</div>
-                            <div>${item.car.brand} ${item.car.model} ${item.car.year}</div>
-                        </div>
-                        <div class="my-1 align-self-stretch d-flex flex-column justify-content-between align-items-end">
-                            <span role="button" class="mb-1 badge bg-primary rounded-pill" onclick="btnLoadQuotation(${item.id},${isLocal})"><i class="far fa-edit"></i></span>
-                            <span class="badge bg-secondary rounded-pill">
-                            ${item.paymentType.method ==  'Automatic'?'Automático':'Efectivo'} -
-                            ${item.paymentType.installments == 6?'6 Cuotas':'1 cuota'}
-                        </span>
-                    </li>
-                `;
-            });
-            document.getElementById(elementTarget).innerHTML = quotationsHTML;
-        }
-    }
-}
-
-// Obtiene las cotizaciones guardadas en Storage
-// y sobre escribe la que tenga el mismo Id que el activo actualmente
-function updateQuotationsList(quotationData, isLocal){
-    const activeId = getFromSession('activeId');
-    const setToStorage = isLocal ? (data) => setToLocal('quotations',data) : (data)=>setToSession('quotations',data);
-    let quotations = isLocal ? getFromLocal('quotations') : getFromSession('quotations');
-    quotations[activeId] = {id:activeId,...quotationData};
-    setToStorage(quotations);
-    renderQuotationsList(true,isLocal);
-}
-
-// Al abrir la página obtiene la ultima cotización
-function restoreLastQutation() {
-    const isEditing = getFromSession('isEditing');
-    const newQuotation = getFromSession('newQuotation');
-    const activeId = getFromSession('activeId');
-    // Si es falso se hizo una cotizacion previamente
-    // Podría haber quedado guardada en el historial o en local
-    if(!newQuotation){
-        // Si isEditing quedó true, lo ultimo que hizo al salir
-        // fue editar o cargar una de las cotizaciones guardads
-        // Si no obtener la ultima activa desde el historial
-        const quotations = isEditing ? getFromLocal('quotations') : getFromSession('quotations');
-        if(quotations) loadQuotation(quotations[activeId]);
-    }
-}
-
-function btnLoadQuotation(id,isLocal){
-    // cambiar id activa por la de la cotización seleccionada
-    setToSession('activeId', Number(id)); 
-    const quotation = isLocal ? getFromLocal('quotations') : getFromSession('quotations');
-    if(isLocal) {
-        setToSession('isEditing', true);
-        setToSession('newQuotation', false);
-        loadQuotation(quotation[Number(id)]);
-    } else {
-        setToSession('isEditing',false);
-        setToSession('newQuotation', false)
-        loadQuotation(quotation[Number(id)]);
-    }
-    // Ocultar historial
-    document.getElementById('btn-offcanvasHistory').click();
-}
-
 // llenar los campos con la información de la cotización
 // y renderizar la cotización
-function loadQuotation(quotationData){
+function loadQuotation(quotationData, isLocal){
     const DOMById = (elId) => document.getElementById(elId);
     let adjustmentIndex;
     switch(quotationData.car.automaticAdjustment){
@@ -336,6 +80,11 @@ function loadQuotation(quotationData){
         case 0.30:
             adjustmentIndex = 2;
     }
+
+    // Reset checkboxes Coberturas
+    resetCoverages();
+    enableCoverages(true);
+
     // Llenar campos
     DOMById('clientName').value = quotationData.person.name;
     DOMById('clientAge').value = quotationData.person.age;
@@ -346,6 +95,19 @@ function loadQuotation(quotationData){
     DOMById('vehicleAdjustment').selectedIndex = adjustmentIndex;
     DOMById('vehicleUsage').selectedIndex = quotationData.car.commercialUse ? 1:0;
     DOMById('vehicleGNC').checked = quotationData.car.gnc;
+    quotationData.coverages.forEach((product) => {
+        switch(product.coverageCode){
+            case 'RC':
+                DOMById('checkRC').checked = true;
+                break;
+            case 'TC':
+                DOMById('checkTC').checked = true;
+                break;
+            case 'TR':
+                DOMById('checkTR').checked = true;
+                break;
+        }
+    })
 
     // habilitar todos los campos para que sean editables
     const allFormElements = ['clientName','clientAge','btn-next-client', 
@@ -365,34 +127,84 @@ function loadQuotation(quotationData){
     // Mostrar cotización
     renderQuotation(quotationData,quotationData.coverages);
     showStep('collapseQuotation');
+
+    Toastify({
+        text: "Cotización recuperada desde " + (isLocal ? 'las guardadas':'el historial'),
+        close: true,
+        className: 'toast-info',
+        duration: 3000
+    }).showToast();
 }
 
-function handleStorage(quotationData){
-    // comprobar si la cotización es nueva
-    // si lo es, guardar en historial
-    // si no lo es y no está editando, actualizar el historial con el id actual
-    const newQuotation = getFromSession('newQuotation');
-    const isEditing = getFromSession('isEditing');
-    if(newQuotation) {
-        // Guardarla en session y actualizar id activa
-        let activeId = getNewStorageId(); // Obtener nueva id
-        setToSession('activeId',activeId);
-        storeQuotation({id: activeId,...quotationData});
-        setToSession('newQuotation',false) // Va a ser falso hasta que el usuario cree una nueva
+function btnLoadQuotation(id,isLocal){
+    // eliminar atributo 'active' del item activo
+    disableActiveItem();
+    // agregar atributo 'active' al item seleccionado
+    enableActiveItem(id, isLocal);
+    // cambiar id activa por la de la cotización seleccionada
+    setToSession('activeId', Number(id));
+    const quotation = isLocal ? getFromLocal('quotations') : getFromSession('quotations');
+    const indexOfActiveId =  quotation.indexOf(quotation.find((q)=> q.id == id));
+    if(isLocal) {
+        setToSession('isEditing', true);
+        setToSession('newQuotation', false);
+        loadQuotation(quotation[indexOfActiveId], isLocal);
     } else {
-        if(isEditing) {
-            // Si está editandola es porque estaba guardada en local
-            // Guardarla actualizada en local
-            updateQuotationsList(quotationData,true);
-        } else {
-            // Si no significa que la tomó desde el historial
-            // Guardarla actualizada en el historial
-            updateQuotationsList(quotationData,false);
+        setToSession('isEditing',false);
+        setToSession('newQuotation', false)
+        loadQuotation(quotation[indexOfActiveId], isLocal);
+    }
+    // Ocultar historial
+    document.getElementById('btn-offcanvasHistory').click();
+}
+
+function btnDeleteQuotation(id, isLocal) {
+    const listTarget = isLocal ? 'offcanvas-saved-list':'offcanvas-history-list';
+    const itemTarget = document.getElementById(listTarget).querySelector(`[data-quotation-id="${id}"]`);
+    if(itemTarget.classList.contains('active')) {
+        Toastify({
+            text: 'No se puede eliminar una cotización activa!',
+            close: true,
+            className: 'toast-danger',
+            duration: 3000
+        }).showToast();
+    } else {
+        const quotations = isLocal ? getFromLocal('quotations') : getFromSession('quotations');
+        const updateStorage = isLocal ? (data)=> setToLocal('quotations',data):(data)=>setToSession('quotations',data);
+        quotations.splice(quotations.indexOf(quotations.find((item) => item.id == id)),1);
+        updateStorage(quotations);
+        itemTarget.remove();
+        if(quotations.length == 0) {
+            const textElement = document.createElement('p');
+            textElement.innerText = 'No hay cotizaciones recientes';
+            document.getElementById(listTarget).appendChild(textElement);
         }
+        Toastify({
+            text: 'Cotización eliminada exitosamente!',
+            close: true,
+            className: 'toast-success',
+            duration: 3000
+        }).showToast();
     }
 }
 
-// falta agregar opcion en el formulario para elegir coberturas
+function disableActiveItem() {
+    const activeId = getFromSession('activeId');
+    const isEditing = getFromSession('isEditing');
+    if(activeId != null) {
+        const listTarget = isEditing ? 'offcanvas-saved-list':'offcanvas-history-list';
+        const itemTarget = document.getElementById(listTarget).querySelector(`[data-quotation-id="${activeId}"]`);
+        itemTarget.classList.remove('active');
+    }
+}
+
+function enableActiveItem(id, isLocal) {
+    const listTarget = isLocal ? 'offcanvas-saved-list':'offcanvas-history-list';
+    const itemTarget = document.getElementById(listTarget).querySelector(`[data-quotation-id="${id}"]`);
+    itemTarget.classList.add('active');
+}
+
+// Cotizar y mostrar resultado
 function quoteAndShow(paymentType) {
     const clientName = cleanClientName(document.getElementById('clientName').value);
     const clientAge = Number(document.getElementById('clientAge').value);
@@ -416,9 +228,15 @@ function quoteAndShow(paymentType) {
             break;
     }
 
+    const selectedCoverages = [];
+
+    if(document.getElementById('checkRC').checked) selectedCoverages.push(PRODUCT_RC);
+    if(document.getElementById('checkTC').checked) selectedCoverages.push(PRODUCT_TC);
+    if(document.getElementById('checkTR').checked) selectedCoverages.push(PRODUCT_TR);
+
     const clientVehicle = new Car(vehicleBrand, vehicleModel, vehicleYear, vehicleAmount, vehicleAdjustment, commercialUse,isGNC);
     const clientData = new Person(clientName, clientAge);
-    const clientCoverages = [PRODUCT_RC,PRODUCT_TC, PRODUCT_TR];
+    const clientCoverages = selectedCoverages;
     const quotation = new Quotation(clientData, clientVehicle, clientCoverages, paymentType);
     const coverages = quotation.quote();
 
@@ -429,51 +247,17 @@ function quoteAndShow(paymentType) {
 
     // Mostrar cotización
     renderQuotation(quotation,coverages);
+
+    Toastify({
+        text: 'Cotización exitosa!',
+        close: true,
+        className: 'toast-success',
+        duration: 3000
+    }).showToast();
+
 }
 
-function renderQuotation(quotation, coverages) {
-    let htmlQuotationData = `
-        <div class="col-4 border rounded-start m-1 p-3">
-            <p class="m-0"><span class="fw-bold">Marca:</span> ${quotation.car.brand}</p>
-            <p class="m-0"><span class="fw-bold">Modelo:</span> ${quotation.car.model}</p>
-            <p class="m-0"><span class="fw-bold">Año:</span> ${quotation.car.year} </p>
-            <p class="m-0"><span class="fw-bold">S.A:</span> $${quotation.car.amount}</p>
-        </div>
-        <div class="col-4 border rounded-end text-rigth m-1 p-3">
-            <p class="m-0"><span class="fw-bold">Combustible adicional:</span>${quotation.car.gnc ? 'GNC':'No'}</p>
-            <p class="m-0"><span class="fw-bold">Uso:</span> ${quotation.car.commercialUse ? 'Comercial':'Particular'}</p>
-            <p class="m-0"><span class="fw-bold">Ajuste:</span> ${quotation.car.automaticAdjustment*100}%</p>
-        </div>
-        <div class="col-4 border rounded-end text-rigth m-1 p-3">
-            <p class="m-0"><span class="fw-bold">Cliente:</span> ${quotation.person.name}</p>
-            <p class="m-0"><span class="fw-bold">Edad:</span> ${quotation.person.age}</p>
-            <p class="m-0"><span class="fw-bold">Forma de pago:</span> ${quotation.paymentType.method ==  'Automatic'?'Automático':'Efectivo'}</p>
-            <p class="m-0"><span class="fw-bold">Cuotas:</span> ${quotation.paymentType.installments == 6?'6 Cuotas':'1 cuota'}</p>
-        </div>
-    `;
-
-    let htmlProductList = "";
-    coverages.forEach(product => { 
-        htmlProductList += `
-            <div class="d-flex align-items-center border-top border-bottom border-dark p-2">
-            <div class="col-8">
-                <p class="m-0 fw-bold">${product.coverageCode} - ${product.name}</p>
-                <p class="m-0">${product.name}</p>
-            </div>
-            <div class="col-4 text-end">
-                <p class="m-0 fw-bold">${quotation.paymentType.installments}x $ ${product.installments}</p>
-            </div>
-            </div>
-        `;
-    });
-
-    // habilitar y mostrar etapa de cotización
-    document.getElementById('btn-collapsePayment').disabled = true;
-    showStep('collapseQuotation');
-    document.getElementById('quotation-data').innerHTML = htmlQuotationData;
-    document.getElementById('quotation-list').innerHTML = htmlProductList;
-}
-
+// Comprobación de cotizaciones anteriores al cargar la página
 if(getFromSession('newQuotation') === null){
     // Establecer newQuotation true porque se inicia una nueva cotización
     // De esta forma la nueva va a quedar almacenada en el historial (sessionStorage)
@@ -482,11 +266,6 @@ if(getFromSession('newQuotation') === null){
 if(getFromSession('isEditing') === null){
     // Establecer isEditing false, si fuera true significa que se cargó desde las guardadas
     setToSession('isEditing', false);
-}
-// Si no hay una cotización activa
-if(getFromSession('activeId') === null){
-    // Id de la cotización activa
-    setToSession('activeId',0);
 }
 // Recuperar historial de la sesión
 renderQuotationsList(false,false);
