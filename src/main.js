@@ -8,6 +8,73 @@ const PRODUCT_RC = new Product('RC', 'Responsabilidad Civil','Cobertura básica,
 const PRODUCT_TC = new Product('TC', 'Tercero Completo', 'Destrucción total/parcial por robo/incendio', 0.0055);
 const PRODUCT_TR = new Product('TR', 'Todo Riesgo', 'Todo riesgo con franquicia del 1% sobre suma asegurada', 0.017);
 
+// API Firebase RTDB
+const API_URL = 'https://cotizador-js-default-rtdb.firebaseio.com/';
+
+// Se crean los "CustomSelect" para marca, año y versión.
+const brandSelect = new CustomSelect('brandSelect');
+const yearSelect = new CustomSelect('yearSelect');
+// A modelSelect se le pasa el callback fillVehicleAmount, para que cuando el usuario
+// Haga click en un item, se complete la suma asegurada del modelo seleccionado
+const modelSelect = new CustomSelect('modelSelect', fillVehicleAmount);
+
+// Llenar campo Marcas
+async function fillBrandSelect() {
+    const ENDPOINT = 'brands.json';
+    if(brandSelect.isReady) brandSelect.reset(); // Si se llenó previamente, resetear
+    brandSelect.isLoading(true);
+    const brands = await getFetch(API_URL+ENDPOINT);
+    brandSelect.createItems(brands);
+    brandSelect.isLoading(false);
+}
+
+// Llenar campo Años y resetear Modelos
+function fillYearSelect() {
+    const years = [
+        {key:6, name: '2022'},
+        {key:5, name: '2021'},
+        {key:4, name: '2020'},
+        {key:3, name: '2019'},
+        {key:2, name: '2018'},
+        {key:1, name: '2017'},
+        {key:0, name: '2016'},
+    ];
+    if(modelSelect.isReady) modelSelect.reset(); // si había modelos, resetear
+    if(yearSelect.isReady) yearSelect.reset(); // Si se llenó previamente, resetear
+    yearSelect.isLoading(true);
+    yearSelect.createItems(years);
+    return new Promise ((resolve) => {
+        setTimeout(()=>{
+            yearSelect.isLoading(false);
+            resolve();
+        },1200);
+    }); // delay ficticio
+}
+
+// Llenar campo Modelos según Marca y Año elegidos
+async function fillModelsSelect(brandKey, year) {
+    const ENDPOINT = 'brandbykey/';
+    if(modelSelect.isReady) modelSelect.reset(); // Si se llenó previamente, resetear
+    modelSelect.isLoading(true);
+    const models = await getFetch(API_URL+ENDPOINT+brandKey+'/'+year+'.json');
+    models.forEach((model) => {
+        model.name = model.model + ' - ' + model.version;
+        delete model.model;
+        delete model.version;
+    });
+    modelSelect.createItems(models);
+    modelSelect.isLoading(false);
+}
+
+// Llenar campo Suma Asegurada
+function fillVehicleAmount(model) {
+    const vehicleAmount = DOMById('vehicleAmount');
+    vehicleAmount.value = model.statedAmount//.toLocaleString('es-AR');
+    vehicleAmount.dataset.statedAmount = model.statedAmount; // dataset usado para validar
+    formatVehicleAmount();
+    vehicleAmount.dispatchEvent(new Event('change')); // Disparar evento para validar
+}
+
 function restoreLastQutation() {
     const isEditing = getFromSession('isEditing');
     const newQuotation = getFromSession('newQuotation');
@@ -34,8 +101,6 @@ function createNewQuotation() {
     setToSession('newQuotation', true);
     setToSession('isEditing',false);
     setToSession('activeId', null);
-    
-    const DOMById = (elId) => document.getElementById(elId);
 
     // Resetear todos los campos
     const allFormElements = ['clientName','clientAge', 
@@ -47,12 +112,18 @@ function createNewQuotation() {
         DOMById(el).style.border = '1px solid #ced4da'; // default bootstrap style
     });
 
+    delete DOMById('vehicleAmount').dataset.statedAmount;
     DOMById('vehicleAdjustment').selectedIndex = 0
     DOMById('vehicleUsage').selectedIndex = 0;
     DOMById('vehicleGNC').checked = false;
 
     // Resetear checkboxes coberturas
     resetCoverages();
+
+    // Reset Selects
+    brandSelect.reset();
+    yearSelect.reset();
+    modelSelect.reset();
 
     // Habilitar campo cliente y vehiculo para empezar desde 0
     DOMById('clientName').disabled = false;
@@ -69,8 +140,23 @@ function createNewQuotation() {
 
 // llenar los campos con la información de la cotización
 // y renderizar la cotización
-function loadQuotation(quotationData, isLocal){
-    const DOMById = (elId) => document.getElementById(elId);
+async function loadQuotation(quotationData, isLocal){
+    
+    // Deshabilitar botones mientras carga
+    DOMById('btn-offcanvasHistory').disabled = true;
+    DOMById('btn-saveQuotation').disabled = true;
+    DOMById('btn-newQuotation').disabled = true;
+
+    // Mostrar última etapa y deshabilitar las anteriores
+    DOMById('btn-collapseClient').disabled = true;
+    DOMById('btn-collapseVehicle').disabled = true;
+    DOMById('btn-collapsePayment').disabled = true;
+    // Mostrar etapa cotización cargando
+    if(DOMById('btn-collapseQuotation').disabled) showStep('collapseQuotation');
+    DOMById('btn-collapseQuotation').disabled = false;
+    DOMById('collapseQuotation').scrollIntoView();
+    renderLoadingQuotation();
+
     let adjustmentIndex;
     switch(quotationData.car.automaticAdjustment){
         case 0.15:
@@ -92,9 +178,22 @@ function loadQuotation(quotationData, isLocal){
     DOMById('vehicleYear').value = quotationData.car.year;
     DOMById('vehicleModel').value = quotationData.car.model;
     DOMById('vehicleAmount').value = quotationData.car.amount;
+    DOMById('vehicleAmount').dataset.statedAmount = quotationData.car.statedAmount; // para validar la suma
     DOMById('vehicleAdjustment').selectedIndex = adjustmentIndex;
     DOMById('vehicleUsage').selectedIndex = quotationData.car.commercialUse ? 1:0;
     DOMById('vehicleGNC').checked = quotationData.car.gnc;
+
+    // Formatear número del campo Suma asegurada
+    formatVehicleAmount();
+
+    // Configurar los CustomSelect
+    fillBrandSelect();
+    fillYearSelect();
+    fillModelsSelect(quotationData.car.brandKey,quotationData.car.year);
+    brandSelect.loadPreviousData(quotationData.car.brandKey);
+    yearSelect.loadPreviousData('',quotationData.car.year);
+    modelSelect.loadPreviousData(quotationData.car.modelKey);
+
     quotationData.coverages.forEach((product) => {
         switch(product.coverageCode){
             case 'RC':
@@ -107,7 +206,7 @@ function loadQuotation(quotationData, isLocal){
                 DOMById('checkTR').checked = true;
                 break;
         }
-    })
+    });
 
     // habilitar todos los campos para que sean editables
     const allFormElements = ['clientName','clientAge','btn-next-client', 
@@ -118,22 +217,27 @@ function loadQuotation(quotationData, isLocal){
         DOMById(el).style.border = '1px solid green';
     });
 
-    // Mostrar última etapa y deshabilitar las anteriores
-    DOMById('btn-collapseClient').disabled = true;
-    DOMById('btn-collapseVehicle').disabled = true;
-    DOMById('btn-collapsePayment').disabled = true;
-    DOMById('btn-collapseQuotation').disabled = false;
+    // Delay con timeout usando IIFE, promesa y await
+    await (() => {
+        return new Promise((resolve) => {
+            setTimeout(resolve,1000);
+        });
+    })();
 
-    // Mostrar cotización
+    // Renderizar cotización
     renderQuotation(quotationData,quotationData.coverages);
-    showStep('collapseQuotation');
-
     Toastify({
         text: "Cotización recuperada desde " + (isLocal ? 'las guardadas':'el historial'),
         close: true,
         className: 'toast-info',
         duration: 3000
     }).showToast();
+
+    // Habilitar botones
+    DOMById('btn-offcanvasHistory').disabled = false;
+    DOMById('btn-saveQuotation').disabled = false;
+    DOMById('btn-newQuotation').disabled = false;
+
 }
 
 function btnLoadQuotation(id,isLocal){
@@ -151,16 +255,19 @@ function btnLoadQuotation(id,isLocal){
         loadQuotation(quotation[indexOfActiveId], isLocal);
     } else {
         setToSession('isEditing',false);
-        setToSession('newQuotation', false)
+        setToSession('newQuotation', false);
         loadQuotation(quotation[indexOfActiveId], isLocal);
     }
     // Ocultar historial
-    document.getElementById('btn-offcanvasHistory').click();
+    const btnHistory = DOMById('btn-offcanvasHistory');
+    btnHistory.disabled = false;
+    DOMById('btn-offcanvasHistory').click();
+    btnHistory.disabled = true;
 }
 
 function btnDeleteQuotation(id, isLocal) {
     const listTarget = isLocal ? 'offcanvas-saved-list':'offcanvas-history-list';
-    const itemTarget = document.getElementById(listTarget).querySelector(`[data-quotation-id="${id}"]`);
+    const itemTarget = DOMById(listTarget).querySelector(`[data-quotation-id="${id}"]`);
     if(itemTarget.classList.contains('active')) {
         Toastify({
             text: 'No se puede eliminar una cotización activa!',
@@ -200,21 +307,30 @@ function disableActiveItem() {
 
 function enableActiveItem(id, isLocal) {
     const listTarget = isLocal ? 'offcanvas-saved-list':'offcanvas-history-list';
-    const itemTarget = document.getElementById(listTarget).querySelector(`[data-quotation-id="${id}"]`);
+    const itemTarget = DOMById(listTarget).querySelector(`[data-quotation-id="${id}"]`);
     itemTarget.classList.add('active');
 }
 
 // Cotizar y mostrar resultado
 function quoteAndShow(paymentType) {
-    const clientName = cleanClientName(document.getElementById('clientName').value);
-    const clientAge = Number(document.getElementById('clientAge').value);
-    const vehicleBrand = document.getElementById('vehicleBrand').value;
-    const vehicleYear = Number(document.getElementById('vehicleYear').value);
-    const vehicleModel = document.getElementById('vehicleModel').value;
-    const vehicleAmount = Number(document.getElementById('vehicleAmount').value);
-    const vehicleAdjustment = Number(document.getElementById('vehicleAdjustment').value);
-    const commercialUse = document.getElementById('vehicleUsage').value == '1' ? false:true;
-    const isGNC = document.getElementById('vehicleGNC').checked;
+
+    const clientName = cleanClientName(DOMById('clientName').value);
+    const clientAge = Number(DOMById('clientAge').value);
+    const vehicleBrand = DOMById('vehicleBrand').value;
+    const vehicleBrandKey = DOMById('vehicleBrand').dataset.selectedItem;
+    const vehicleYear = Number(DOMById('vehicleYear').value);
+    const vehicleModel = DOMById('vehicleModel').value;
+    const vehicleModelKey = DOMById('vehicleModel').dataset.selectedItem;
+    const vehicleAmount = Number(DOMById('vehicleAmount').value.trim().replaceAll('.',''));
+    const vehicleStatedAmount = Number(DOMById('vehicleAmount').dataset.statedAmount);
+    const vehicleAdjustment = Number(DOMById('vehicleAdjustment').value);
+    const commercialUse = DOMById('vehicleUsage').value == '1' ? false:true;
+    const isGNC = DOMById('vehicleGNC').checked;
+
+    // Deshabilitar botones mientras carga
+    DOMById('btn-offcanvasHistory').disabled = true;
+    DOMById('btn-saveQuotation').disabled = true;
+    DOMById('btn-newQuotation').disabled = true;
 
     switch (paymentType) {
         case 1:
@@ -230,31 +346,42 @@ function quoteAndShow(paymentType) {
 
     const selectedCoverages = [];
 
-    if(document.getElementById('checkRC').checked) selectedCoverages.push(PRODUCT_RC);
-    if(document.getElementById('checkTC').checked) selectedCoverages.push(PRODUCT_TC);
-    if(document.getElementById('checkTR').checked) selectedCoverages.push(PRODUCT_TR);
+    if(DOMById('checkRC').checked) selectedCoverages.push(PRODUCT_RC);
+    if(DOMById('checkTC').checked) selectedCoverages.push(PRODUCT_TC);
+    if(DOMById('checkTR').checked) selectedCoverages.push(PRODUCT_TR);
 
-    const clientVehicle = new Car(vehicleBrand, vehicleModel, vehicleYear, vehicleAmount, vehicleAdjustment, commercialUse,isGNC);
+    const clientVehicle = new Car(vehicleBrand, vehicleBrandKey, vehicleModel, vehicleModelKey, vehicleYear, vehicleAmount,vehicleStatedAmount, vehicleAdjustment, commercialUse,isGNC);
     const clientData = new Person(clientName, clientAge);
     const clientCoverages = selectedCoverages;
     const quotation = new Quotation(clientData, clientVehicle, clientCoverages, paymentType);
     const coverages = quotation.quote();
-
     // Guardar la cotización
     let {product, ...quotationData} = quotation;
     quotationData = {...quotationData,coverages};
     handleStorage(quotationData);
+    
+    // Renderizar animación cargando..
+    renderLoadingQuotation();
+    showStep('collapseQuotation');
 
-    // Mostrar cotización
-    renderQuotation(quotation,coverages);
+    setTimeout(()=>{
 
-    Toastify({
-        text: 'Cotización exitosa!',
-        close: true,
-        className: 'toast-success',
-        duration: 3000
-    }).showToast();
+        // Renderizar cotización
+        renderQuotation(quotation,coverages);
 
+        Toastify({
+            text: 'Cotización exitosa!',
+            close: true,
+            className: 'toast-success',
+            duration: 3000
+        }).showToast();
+        
+        // Habilitar botones
+        DOMById('btn-offcanvasHistory').disabled = false;
+        DOMById('btn-saveQuotation').disabled = false;
+        DOMById('btn-newQuotation').disabled = false;
+
+    },1000); // delay ficticio
 }
 
 // Comprobación de cotizaciones anteriores al cargar la página

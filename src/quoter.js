@@ -9,11 +9,14 @@ class Person {
 
 // Clase "auto" con las propiedades de cada vehículo
 class Car {
-    constructor(brand, model, year, amount, automaticAdjustment, commercialUse = false, gnc = false) {
+    constructor(brand, brandKey, model, modelKey, year, amount,statedAmount, automaticAdjustment, commercialUse = false, gnc = false, ) {
         this.brand = brand;
+        this.brandKey = brandKey
         this.model = model;
+        this.modelKey = modelKey;
         this.year = year;
         this.amount = parseInt(amount);
+        this.statedAmount = parseInt(statedAmount);
         this.automaticAdjustment = parseFloat(automaticAdjustment);
         this.gnc = gnc;
         this.commercialUse = commercialUse;
@@ -62,8 +65,8 @@ class Quotation {
                 coverageCode: prod.code,
                 name: prod.name,
                 description: prod.description,
-                premium: premium,
-                installments: (premium / this.paymentType.installments).toFixed(0),
+                premium: Number(premium),
+                installments: Number((premium / this.paymentType.installments).toFixed(0)),
             });
         }
         )

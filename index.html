@@ -22,6 +22,7 @@
 	<script src="src/storage.js" defer></script>
 	<script src="src/validations.js" defer></script>
 	<script src="src/quoter.js" defer></script>
+	<script src="SRC/customSelect.js" defer></script>
 	<script src="src/main.js" defer></script>
 	<title>Cotizador Online</title>
 </head>
@@ -51,7 +52,7 @@
 			</div>
 		</div>
 	</header>
-	<main class="m-auto p-5 w-md-75 w-100">
+	<main class="m-auto p-md-5 p-2 w-md-75 w-100">
 		<div class="d-flex bg-white h-50 w-100 rounded">
 			<div class="accordion w-100" id="formMain">
 				<div class="accordion-item">
@@ -84,7 +85,7 @@
 									</button>
 								</div>
 								<div class="col-sm-auto col-12 text-center">
-									<button id='btn-next-client' type="button" class="btn w-100 btn-primary" onclick="nextStep(validateClientData(), 'collapseVehicle','collapseClient');" disabled>Continuar</button>
+									<button id='btn-next-client' type="button" class="btn w-100 btn-primary" onclick="nextStep(validateClientData(), 'collapseVehicle','collapseClient',fillBrandSelect);" disabled>Continuar</button>
 								</div>
 							</div>
 						</div>
@@ -104,27 +105,49 @@
 							<label for="vehicleBrand" class="form-label">Indicanos la marca</label>
 							<div class="input-group mb-3">
 								<span class="input-group-text"><i class="fas fa-car"></i></span>
-								<input type="text" id="vehicleBrand" name="vehicleBrand" class="form-control"
-									placeholder="Volkswagen" aria-label="Nombre del cliente">
+								<div id="brandSelect" class="customSelect form-control">
+									<input id="vehicleBrand" class="form-control" type="text" autocomplete="off" placeholder='Seleccione o escriba la marca'>
+									<div class="spinner-border" role="status" hidden>
+										<span class="visually-hidden">Cargando...</span>
+									</div>
+									<div class="arrow arrow-hidden"></div>
+									<div class='customSelect-items' hidden>
+									</div>
+								</div>
 							</div>
 							<label for="vehicleYear" class="form-label">De que año es?</label>
 							<div class="input-group mb-3">
-								<span class="input-group-text"><i class="fa-solid fa-calendar"></i></span>
-								<input type="number" id="vehicleYear" name="vehicleYear" class="form-control"
-									placeholder="2022" aria-label="Año del vehículo" disabled>
+								<span class="input-group-text"><i class="fas fa-car"></i></span>
+								<div id="yearSelect" class="customSelect form-control">
+									<input id="vehicleYear" class="form-control" type="text" autocomplete="off" placeholder='Seleccione un año'>
+									<div class="spinner-border" role="status" hidden>
+										<span class="visually-hidden">Cargando...</span>
+									</div>
+									<div class="arrow arrow-hidden"></div>
+									<div class='customSelect-items' hidden>
+									</div>
+								</div>
 							</div>
 							<label for="vehicleModel" class="form-label">Modelo</label>
 							<div class="input-group mb-3">
 								<span class="input-group-text"><i class="fas fa-car-side"></i></span>
-								<input type="text" id="vehicleModel" name="vehicleModel" class="form-control"
-									placeholder="GOL 1.6 5P" aria-label="Modelo del vehículo" disabled>
+								<div id="modelSelect" class="customSelect form-control">
+									<input id="vehicleModel" class="form-control" type="text" autocomplete="off" placeholder='Seleccione o escriba la marca'>
+									<div class="spinner-border" role="status" hidden>
+										<span class="visually-hidden">Cargando...</span>
+									</div>
+									<div class="arrow arrow-hidden"></div>
+									<div class='customSelect-items' hidden>
+									</div>
+								</div>
 							</div>
 							<label for="vehicleAmount" class="form-label">Suma asegurada</label>
 							<div class="input-group mb-3">
 								<span class="input-group-text"><i class="fas fa-dollar-sign"></i></span>
-								<input type="number" id="vehicleAmount" name="vehicleAmount" class="form-control"
+								<input type="text" id="vehicleAmount" name="vehicleAmount" class="form-control"
 									placeholder="1500000" aria-label="Suma asegurada del vehículo" disabled>
 							</div>
+							<div id="alert-vehicleAmount"></div>
 							<label for="vehicleAdjustment" class="form-label">Ajuste automático</label>
 							<select id="vehicleAdjustment" class="form-select mb-3" aria-label="Ajuste automático">
 								<option value="0.15">15%</option>
@@ -145,19 +168,19 @@
 							</div>
 							<p class="form-label">Seleccioná las coberturas:</p>
 							<div class="form-check m-auto mb-3">
-								<input class="form-check-input" type="checkbox" id="checkRC" checked="checked" disabled>
+								<input class="chkCoverage form-check-input" type="checkbox" id="checkRC" checked="checked" disabled>
 								<label class="form-check-label" for="checkRC">
 									Responsabilidad Civil
 								</label>
 							</div>
 							<div class="form-check m-auto mb-3">
-								<input class="form-check-input" type="checkbox" id="checkTC" disabled>
+								<input class="chkCoverage form-check-input" type="checkbox" id="checkTC" disabled>
 								<label class="form-check-label" for="checkTC">
 									Tercero Completo
 								</label>
 							</div>
 							<div class="form-check m-auto mb-3">
-								<input class="form-check-input" type="checkbox" id="checkTR" disabled>
+								<input class="chkCoverage form-check-input" type="checkbox" id="checkTR" disabled>
 								<label class="form-check-label" for="checkTR">
 									Todo Riesgo
 								</label>
@@ -258,7 +281,7 @@
 						data-bs-parent="#formMain">
 						<div class="accordion-body">
 							<div id="quotation-data" class="d-flex flex-sm-nowrap flex-wrap g-2 justify-content-center align-items-stretch m-1">
-								<div class="col-4 placeholder-glow border rounded-start m-1 p-3">
+								<div class="col-sm-4 col-12 placeholder-glow border rounded-start m-1 p-3">
 									<p class="m-0 placeholder-glow">
 										<span class="placeholder col-3"></span>
 										<span class="placeholder col-8"></span>
@@ -268,7 +291,7 @@
 										<span class="placeholder col-9"></span>
 									</p>
 								</div>
-								<div class="col-4 border rounded-end text-rigth m-1 p-3">
+								<div class="col-sm-4 col-12 border rounded-end text-rigth m-1 p-3">
 									<p class="m-0 placeholder-glow">
 										<span class="placeholder col-6"></span>
 										<span class="placeholder col-5"></span>
@@ -278,7 +301,7 @@
 										<span class="placeholder col-9"></span>
 									</p>
 								</div>
-								<div class="col-4 border rounded-end text-rigth m-1 p-3">
+								<div class="col-sm-4 col-12 border rounded-end text-rigth m-1 p-3">
 									<p class="m-0 placeholder-glow">
 										<span class="placeholder col-6"></span>
 										<span class="placeholder col-5"></span>
@@ -292,39 +315,39 @@
 							<div class="d-flex flex-column align-items-stretch">
 								<div id="quotation-list" class="d-flex flex-column align-items-stretch">
 									<div class="d-flex align-items-center border-top border-bottom border-dark p-2">
-										<div class="col-8">
+										<div class="col-sm-8 col-12">
 											<p class="m-0 placeholder-glow">
 												<span class="placeholder col-4"></span>
 												<span class="placeholder col-10"></span>
 											</p>
 										</div>
-										<div class="col-4 fw-bold text-end">
+										<div class="col-sm-4 col-12 fw-bold text-end">
 											<p class="m-0 placeholder-glow">
 												<span class="placeholder col-4"></span>
 											</p>
 										</div>
 									</div>
 									<div class="d-flex align-items-center border-top border-bottom border-dark p-2">
-										<div class="col-8">
+										<div class="ol-sm-8 col-12">
 											<p class="m-0 placeholder-glow">
 												<span class="placeholder col-4"></span>
 												<span class="placeholder col-10"></span>
 											</p>
 										</div>
-										<div class="col-4 fw-bold text-end">
+										<div class="col-sm-4 col-12 fw-bold text-end">
 											<p class="m-0 placeholder-glow">
 												<span class="placeholder col-4"></span>
 											</p>
 										</div>
 									</div>
 									<div class="d-flex align-items-center border-top border-bottom border-dark p-2">
-										<div class="col-8">
+										<div class="ol-sm-8 col-12">
 											<p class="m-0 placeholder-glow">
 												<span class="placeholder col-4"></span>
 												<span class="placeholder col-10"></span>
 											</p>
 										</div>
-										<div class="col-4 fw-bold text-end">
+										<div class="col-sm-4 col-12 fw-bold text-end">
 											<p class="m-0 placeholder-glow">
 												<span class="placeholder col-4"></span>
 											</p>
@@ -342,10 +365,10 @@
 									</button>
 								</div>
 								<div class="col-sm-auto col-12 text-center mb-sm-0 mb-3">
-									<button type="button" class="m-1 w-100 btn btn-primary" onclick="saveQuotation();">Guardar</button>
+									<button type="button" id="btn-saveQuotation" class="m-1 w-100 btn btn-primary" onclick="saveQuotation();">Guardar</button>
 								</div>
 								<div class="col-sm-auto col-12 text-center">
-									<button type="button" class="m-1 w-100 btn btn-primary" onclick="createNewQuotation();">Nueva</button>
+									<button type="button" id="btn-newQuotation" class="m-1 w-100 btn btn-primary" onclick="createNewQuotation();">Nueva</button>
 								</div>
 							</div>
 						</div>

@@ -72,7 +72,7 @@ function renderQuotation(quotation, coverages) {
             <p class="m-0"><span class="fw-bold">Marca:</span> ${quotation.car.brand}</p>
             <p class="m-0"><span class="fw-bold">Modelo:</span> ${quotation.car.model}</p>
             <p class="m-0"><span class="fw-bold">Año:</span> ${quotation.car.year} </p>
-            <p class="m-0"><span class="fw-bold">S.A:</span> $${quotation.car.amount}</p>
+            <p class="m-0"><span class="fw-bold">S.A:</span> $${quotation.car.amount.toLocaleString('es-AR')}</p>
         </div>
         <div class="col-sm-4 col-12 border rounded-end text-rigth m-1 p-3">
             <p class="m-0"><span class="fw-bold">Combustible adicional:</span>${quotation.car.gnc ? 'GNC':'No'}</p>
@@ -96,7 +96,7 @@ function renderQuotation(quotation, coverages) {
                     <p class="m-0">${product.description}</p>
                 </div>
                 <div class="col-sm-4 col-12 text-end">
-                    <p class="m-0 fw-bold">${quotation.paymentType.installments}x $ ${product.installments}</p>
+                    <p class="m-0 fw-bold">${quotation.paymentType.installments}x $ ${product.installments.toLocaleString('es-AR')}</p>
                 </div>
             </div>
         `;
@@ -104,7 +104,43 @@ function renderQuotation(quotation, coverages) {
 
     // habilitar y mostrar etapa de cotización
     document.getElementById('btn-collapsePayment').disabled = true;
-    showStep('collapseQuotation');
+    document.getElementById('quotation-data').innerHTML = htmlQuotationData;
+    document.getElementById('quotation-list').innerHTML = htmlProductList;
+}
+
+/* Esta función agrega los mismos elementos que renderQuotation()
+Pero estos tienen las clases placeholder-glow y placeholder de bootstrap
+Que crean una animación simulando la carga de datos */
+function renderLoadingQuotation() {
+    let htmlQuotationData = `
+    <div class="col-sm-4 col-12 placeholder-glow border rounded-start m-1 p-3">
+        <p class="m-0 placeholder-glow">
+            <span class="placeholder col-3"></span>
+            <span class="placeholder col-8"></span>
+            <span class="placeholder col-3"></span>
+            <span class="placeholder col-8"></span>
+            <span class="placeholder col-2"></span>
+            <span class="placeholder col-9"></span>
+        </p>
+    </div>
+    `.repeat(3); // repite la cadena 3 veces.
+
+    let htmlProductList = `
+    <div class="d-flex align-items-center border-top border-bottom border-dark p-2">
+        <div class="col-sm-8 col-12">
+            <p class="m-0 placeholder-glow">
+                <span class="placeholder col-4"></span>
+                <span class="placeholder col-10"></span>
+            </p>
+        </div>
+        <div class="col-sm-4 col-12 fw-bold text-end">
+            <p class="m-0 placeholder-glow">
+                <span class="placeholder col-4"></span>
+            </p>
+        </div>
+    </div>
+    `.repeat(3); // x3
+
     document.getElementById('quotation-data').innerHTML = htmlQuotationData;
     document.getElementById('quotation-list').innerHTML = htmlProductList;
 }

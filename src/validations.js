@@ -1,7 +1,5 @@
 //---------------VALIDACIONES---------------//
 function isValid(fieldId) {
-    const DOMById = (elId) => document.getElementById(elId);
-
     switch (fieldId) {
         case 'clientName':
             const clientName = DOMById('clientName').value.trim().replace(' ','');
@@ -20,24 +18,48 @@ function isValid(fieldId) {
             if(vehicleBrand.split('').some(char => char.toLowerCase() == char.toUpperCase())) return false;
             if(vehicleBrand.length < 3) return false;
             if(vehicleBrand.split('').some(char => !isNaN(parseInt(char)))) return false;
+            if(!DOMById('vehicleBrand').dataset.selectedItem) return false;
             return true;
         case 'vehicleYear':
             const vehicleYear = Number(DOMById('vehicleYear').value.trim());
             if(isNaN(vehicleYear)) return false;
-            if(vehicleYear < 2012) return false;
+            if(vehicleYear < 2016) return false;
             if(vehicleYear > 2022) return false;
+            if(!DOMById('vehicleYear').dataset.selectedItem) return false;
             return true;
         case 'vehicleModel':
             const vehicleModel = DOMById('vehicleModel').value.trim();
             if(vehicleModel.toLowerCase() == vehicleModel.toUpperCase()) return false;
             if(vehicleModel.length < 5) return false;
+            if(!DOMById('vehicleModel').dataset.selectedItem) return false;
             return true;
         case 'vehicleAmount':
-            const vehicleAmount = Number(DOMById('vehicleAmount').value.trim());
+            const vehicleAmount = Number(DOMById('vehicleAmount').value.trim().replaceAll('.',''));
+            const vehicleStatedAmount = Number(DOMById('vehicleAmount').dataset?.statedAmount);
             if(isNaN(vehicleAmount)) return false;
-            if(vehicleAmount < 100000) return false;
+            if(!calculateVehicleAmount(vehicleStatedAmount, vehicleAmount)) return false;
             return true;
     }
+}
+
+// Validar que la suma ingresada por el usuario no supere 20%
+// de la establecida "oficialmente"
+function calculateVehicleAmount(statedAmount, userAmount) {
+    const maxAmount = statedAmount + (statedAmount*0.2);
+    if(userAmount > maxAmount || userAmount < statedAmount) {
+        showAlert(`La suma asegurada no debe superar 20% de la establecida.<br>Valores permitidos: $ ${statedAmount.toLocaleString('es-AR')} - ${maxAmount.toLocaleString('es-AR')}`,
+        'danger','vehicleAmount')
+        return false;
+    }
+    // Si hubo un error, ocultarlo
+    hideAlert('vehicleAmount');
+    return true;
+}
+
+function formatVehicleAmount() {
+    const vehicleAmountInput = document.getElementById('vehicleAmount');
+    const vehicleAmount = Number(vehicleAmountInput.value.trim().replaceAll('.',''));
+    vehicleAmountInput.value = vehicleAmount.toLocaleString('es-AR');
 }
 
 function validateClientData() {
@@ -54,6 +76,7 @@ function validateClientData() {
     return true;
 }
 
+// Validar todos los campos de "Datos del vehículo"
 function validateVehicleData() {
     const fields = ['vehicleBrand', 'vehicleYear', 'vehicleModel', 'vehicleAmount'];
     let invalids = 0;
@@ -69,10 +92,10 @@ function validateVehicleData() {
 }
 
 function validateCoverages() {
-    const checkboxes = ['checkRC', 'checkTC', 'checkTR'];
+    const checkboxes = document.querySelectorAll('.chkCoverage');
     let selectedCount = 0;
     checkboxes.forEach((check) => {
-        if(document.getElementById(check).checked){
+        if(check.checked){
             selectedCount += 1;
         }
     })
@@ -91,8 +114,9 @@ function validateCoverages() {
 }
 
 function enableCoverages(isValid) {
-    const checkboxes = ['checkRC', 'checkTC', 'checkTR'];
-    checkboxes.forEach((check) => document.getElementById(check).disabled = !isValid)
+    //const checkboxes = ['checkRC', 'checkTC', 'checkTR'];
+	const checkboxes = document.querySelectorAll('.chkCoverage');
+    checkboxes.forEach((check) => check.disabled = !isValid)
 }
 
 function resetCoverages() {
@@ -100,17 +124,17 @@ function resetCoverages() {
     checkboxes.forEach((check) => document.getElementById(check).checked = false);
 }
 
-function nextStep(isValid, collapseId, actualCollapseId) {
+function nextStep(isValid, collapseId, actualCollapseId, callback = '') {
     if(isValid){
         // Si hubo un error, ocultar mensaje
-        const alertMsg = document.getElementById('alert-'+actualCollapseId);
-        if(alertMsg.innerHTML !== '') alertMsg.innerHTML = '';
+        hideAlert(actualCollapseId);
         // Deshabiliar etapa actual
         document.getElementById('btn-'+actualCollapseId).disabled = true;
         // Ir a la siguiente etapa
         showStep(collapseId)
+        if(callback) callback();
     } else {
-        showAlert('Los datos ingresados son inválidos, por favor revisalos.','danger','alert-' + actualCollapseId)
+        showAlert('Los datos ingresados son inválidos, por favor revisalos.','danger',actualCollapseId)
     }
 }
 
@@ -128,18 +152,24 @@ function showStep(collapseId) {
 }
 
 function showAlert(msg, type, targetId){
-    const alertHTML = document.getElementById(targetId);
-    alertHTML.innerHTML = '<div class="alert alert-' + type + ' alert-dismissible" role="alert">' + msg + '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>';
+    const alertHTML = document.getElementById('alert-'+targetId);
     alertHTML.scrollIntoView();
+    alertHTML.innerHTML = '<div class="alert alert-' + type + ' alert-dismissible" role="alert">' + msg + '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>';
 }
 
-function validateFieldEnableNext(isValid, fieldElement, nextElement = ''){
+function hideAlert(collapseId){
+    const alertMsg = document.getElementById('alert-'+collapseId);
+    if(alertMsg.innerHTML !== '') alertMsg.innerHTML = '';
+}
+
+function validateFieldEnableNext(isValid, fieldElement, nextElement = '', optionalCallback){
     if(!isValid){
         fieldElement.style.border = '1px solid red';
         if(nextElement != '') document.getElementById(nextElement).disabled = true;
     } else {
         fieldElement.style.border = '1px solid green';
         if(nextElement != '') document.getElementById(nextElement).disabled = false;
+        if(typeof(optionalCallback) == 'function') optionalCallback();
     }
 }
 
@@ -151,27 +181,40 @@ clientNameEvents.addEventListener('input', () => validateFieldEnableNext(isValid
 const clientAgeEvents = document.getElementById('clientAge');
 clientAgeEvents.addEventListener('input', () => validateFieldEnableNext(isValid('clientAge'), clientAgeEvents,'btn-next-client'));
 
+clientAgeEvents.addEventListener('keyup', (event) => {
+	if(event.key == 'Enter' && isValid('clientAge')) {
+		document.getElementById('btn-next-client').click();
+	}
+})
+
 const vehicleBrandEvents = document.getElementById('vehicleBrand');
-vehicleBrandEvents.addEventListener('input', () => validateFieldEnableNext(isValid('vehicleBrand'), vehicleBrandEvents,'vehicleYear'));
+vehicleBrandEvents.addEventListener('change', () => validateFieldEnableNext(isValid('vehicleBrand'), vehicleBrandEvents,'',fillYearSelect));
 
 const vehicleYearEvents = document.getElementById('vehicleYear');
-vehicleYearEvents.addEventListener('input', () => validateFieldEnableNext(isValid('vehicleYear'), vehicleYearEvents,'vehicleModel'));
+vehicleYearEvents.addEventListener('change', () => validateFieldEnableNext(isValid('vehicleYear'), vehicleYearEvents,'',()=>{
+    const vehicleBrand = document.getElementById('vehicleBrand');
+    const selectedBrandKey = Number(vehicleBrand.dataset.selectedItem);
+    fillModelsSelect(selectedBrandKey, Number(vehicleYearEvents.value));
+}));
 
 const vehicleModelEvents = document.getElementById('vehicleModel');
-vehicleModelEvents.addEventListener('input', () => validateFieldEnableNext(isValid('vehicleModel'), vehicleModelEvents,'vehicleAmount'));
+vehicleModelEvents.addEventListener('change', () => validateFieldEnableNext(isValid('vehicleModel'), vehicleModelEvents,'vehicleAmount'));
 
 const vehicleAmountEvents = document.getElementById('vehicleAmount');
-vehicleAmountEvents.addEventListener('input', () => {
+vehicleAmountEvents.addEventListener('change', () => {
     let isvalid = isValid('vehicleAmount');
     validateFieldEnableNext(isvalid, vehicleAmountEvents);
     enableCoverages(isvalid);
 });
 
-const checkRC = document.getElementById('checkRC');
-checkRC.addEventListener('change',() => validateCoverages());
+vehicleAmountEvents.addEventListener('input', () => {
+    ///[^0-9]/g para reemplazar todo lo que no sean numeros de 0-9
+    vehicleAmountEvents.value = vehicleAmountEvents.value.replace(/[^0-9]/g,'');
+    formatVehicleAmount();
+    let isvalid = isValid('vehicleAmount');
+    validateFieldEnableNext(isvalid, vehicleAmountEvents);
+    enableCoverages(isvalid);
+});
 
-const checkTC = document.getElementById('checkTC');
-checkTC.addEventListener('change',() => validateCoverages());
-
-const checkTR = document.getElementById('checkTR');
-checkTR.addEventListener('change',() => validateCoverages());
+const chkCoverage = document.querySelectorAll('.chkCoverage');
+chkCoverage.forEach((chk)=> chk.addEventListener('change',() => validateCoverages()));
