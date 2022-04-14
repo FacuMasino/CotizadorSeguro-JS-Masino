@@ -43,9 +43,11 @@ class CustomSelect {
 	loadPreviousData(key, name = ''){
 		// Para seleccionar un dato que ya estaba cargado antes
 		if(this.itemsArray.length > 0) {
-			const foundItem = key != '' ? this.itemsArray.find((item) => item.key == key):this.itemsArray.find((item) => item.name == name);
+			const foundItem = key != '' ? this.itemsArray.find((item) => item.key == Number(key)):this.itemsArray.find((item) => item.name == name);
 			this.inputSelect.value = foundItem.name;
 			this.inputSelect.dataset.selectedItem = foundItem.key;
+			console.log(foundItem);
+			console.log(foundItem.key);
 		}
 	}
 

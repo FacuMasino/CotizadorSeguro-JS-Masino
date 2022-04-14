@@ -47,7 +47,7 @@ function isValid(fieldId) {
 function calculateVehicleAmount(statedAmount, userAmount) {
     const maxAmount = statedAmount + (statedAmount*0.2);
     if(userAmount > maxAmount || userAmount < statedAmount) {
-        showAlert(`La suma asegurada no debe superar 20% de la establecida.<br>Valores permitidos: $ ${statedAmount.toLocaleString('es-AR')} - ${maxAmount.toLocaleString('es-AR')}`,
+        showAlert(`La suma asegurada no debe superar el 20% de lo establecido.<br>Valores permitidos: $ ${statedAmount.toLocaleString('es-AR')} - ${maxAmount.toLocaleString('es-AR')}`,
         'danger','vehicleAmount')
         return false;
     }

@@ -152,7 +152,7 @@ async function loadQuotation(quotationData, isLocal){
     DOMById('btn-collapseVehicle').disabled = true;
     DOMById('btn-collapsePayment').disabled = true;
     // Mostrar etapa cotización cargando
-    if(DOMById('btn-collapseQuotation').disabled) showStep('collapseQuotation');
+    if(DOMById('btn-collapseQuotation').classList.contains('collapsed')) showStep('collapseQuotation');
     DOMById('btn-collapseQuotation').disabled = false;
     DOMById('collapseQuotation').scrollIntoView();
     renderLoadingQuotation();
@@ -187,9 +187,9 @@ async function loadQuotation(quotationData, isLocal){
     formatVehicleAmount();
 
     // Configurar los CustomSelect
-    fillBrandSelect();
-    fillYearSelect();
-    fillModelsSelect(quotationData.car.brandKey,quotationData.car.year);
+    await fillBrandSelect();
+    await fillYearSelect();
+    await fillModelsSelect(quotationData.car.brandKey,quotationData.car.year);
     brandSelect.loadPreviousData(quotationData.car.brandKey);
     yearSelect.loadPreviousData('',quotationData.car.year);
     modelSelect.loadPreviousData(quotationData.car.modelKey);

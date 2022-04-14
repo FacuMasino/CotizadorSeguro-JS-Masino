@@ -4,8 +4,23 @@
 	--bs-primary-rgb: 49,84,175;
 }
 
+html {
+	width: 100%;
+}
+
 body {
+	display: flex;
+	flex-direction: column;
 	background-color: #E5E5E5;
+	height: 100vh;
+}
+
+footer,header {
+	flex:none;
+}
+
+.main-container {
+	flex: 1 0 auto;
 }
 
 #navMenu {
@@ -69,6 +84,12 @@ body {
 input:disabled{
 	border: 1px solid #ced4da !important;
 }
+
+/* Footer */
+
+
+
+/* Estilos Off Canvas */
 
 #offcanvas-history-list div:nth-child(n+2) {
 	border-top: none !important;
