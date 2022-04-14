@@ -46,8 +46,6 @@ class CustomSelect {
 			const foundItem = key != '' ? this.itemsArray.find((item) => item.key == Number(key)):this.itemsArray.find((item) => item.name == name);
 			this.inputSelect.value = foundItem.name;
 			this.inputSelect.dataset.selectedItem = foundItem.key;
-			console.log(foundItem);
-			console.log(foundItem.key);
 		}
 	}
 
