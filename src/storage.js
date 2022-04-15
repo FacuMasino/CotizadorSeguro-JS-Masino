@@ -13,15 +13,9 @@ function handleStorage(quotationData){
         setToSession('newQuotation',false) // Va a ser falso hasta que el usuario cree una nueva
         enableActiveItem(activeId,false);
     } else {
-        if(isEditing) {
-            // Si está editandola es porque estaba guardada en local
-            // Guardarla actualizada en local
-            updateQuotationsList(quotationData,true);
-        } else {
-            // Si no significa que la tomó desde el historial
-            // Guardarla actualizada en el historial
-            updateQuotationsList(quotationData,false);
-        }
+            // Si está editandola es porque estaba guardada en local y se debe guardar ahí
+            // Si no significa que la tomó desde el historial, se guarda en Session
+            updateQuotationsList(quotationData,isEditing);
     }
 }
 
@@ -41,14 +35,12 @@ function getNewStorageId(isLocal = false) {
 // Guardar cotización y actualizar lista
 function storeQuotation(quotation, isLocal = false) {
     if(isLocal){
-        let localQuotations = getFromLocal('quotations') || false;
-        if(!localQuotations) localQuotations = [];
+        let localQuotations = getFromLocal('quotations') || [];
         localQuotations.push(quotation);
         setToLocal('quotations',localQuotations);
         renderQuotationsList(false, true);
     } else {
-        let sessionQuotations = getFromSession('quotations') || false;
-        if(!sessionQuotations) sessionQuotations = [];
+        let sessionQuotations = getFromSession('quotations') || [];
         sessionQuotations.push(quotation);
         setToSession('quotations',sessionQuotations);
         renderQuotationsList(false, false);

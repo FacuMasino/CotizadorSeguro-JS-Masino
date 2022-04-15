@@ -3,9 +3,8 @@ function isValid(fieldId) {
     switch (fieldId) {
         case 'clientName':
             const clientName = DOMById('clientName').value.trim().replace(' ','');
-            if(clientName.split('').some(char => char.toLowerCase() == char.toUpperCase())) return false;
+            if(clientName.split('').some(char => char.toLowerCase() == char.toUpperCase() || !isNaN(parseInt(char)))) return false;
             if(clientName.length < 3) return false;
-            if(clientName.split('').some(char => !isNaN(parseInt(char)))) return false;
             return true;
         case 'clientAge':
             const clientAge = Number(DOMById('clientAge').value.trim());
@@ -15,9 +14,8 @@ function isValid(fieldId) {
             return true;
         case 'vehicleBrand':
             const vehicleBrand = DOMById('vehicleBrand').value.trim().replace(' ','');
-            if(vehicleBrand.split('').some(char => char.toLowerCase() == char.toUpperCase())) return false;
+            if(vehicleBrand.split('').some(char => char.toLowerCase() == char.toUpperCase() || !isNaN(parseInt(char)))) return false;
             if(vehicleBrand.length < 3) return false;
-            if(vehicleBrand.split('').some(char => !isNaN(parseInt(char)))) return false;
             if(!DOMById('vehicleBrand').dataset.selectedItem) return false;
             return true;
         case 'vehicleYear':
@@ -202,7 +200,7 @@ vehicleModelEvents.addEventListener('change', () => validateFieldEnableNext(isVa
 
 const vehicleAmountEvents = document.getElementById('vehicleAmount');
 vehicleAmountEvents.addEventListener('change', () => {
-    let isvalid = isValid('vehicleAmount');
+    const isvalid = isValid('vehicleAmount');
     validateFieldEnableNext(isvalid, vehicleAmountEvents);
     enableCoverages(isvalid);
 });
@@ -211,10 +209,10 @@ vehicleAmountEvents.addEventListener('input', () => {
     ///[^0-9]/g para reemplazar todo lo que no sean numeros de 0-9
     vehicleAmountEvents.value = vehicleAmountEvents.value.replace(/[^0-9]/g,'');
     formatVehicleAmount();
-    let isvalid = isValid('vehicleAmount');
+    const isvalid = isValid('vehicleAmount');
     validateFieldEnableNext(isvalid, vehicleAmountEvents);
     enableCoverages(isvalid);
 });
 
 const chkCoverage = document.querySelectorAll('.chkCoverage');
-chkCoverage.forEach((chk)=> chk.addEventListener('change',() => validateCoverages()));
+chkCoverage.forEach((chk)=> chk.addEventListener('change',validateCoverages));

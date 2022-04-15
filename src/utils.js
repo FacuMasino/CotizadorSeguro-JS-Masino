@@ -10,11 +10,9 @@ const getFetch = async (url) => {
 	const response = await fetch(url);
 	if(response.ok) {
 		const data = await response.json();
-		//console.log('fetch ok');
-		//console.log(data);
 		return data;
 	}
-	console.log('Error fetching ' + url);
-	console.log(response.message);
+	console.error('Error fetching ' + url);
+	console.error(response.message);
 	return null;
 };

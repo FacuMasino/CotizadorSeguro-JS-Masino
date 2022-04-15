@@ -124,7 +124,7 @@ function totalPremium(totalPrime, paymentType) {
     const SSN_FEE = 0.02; // tasa Superintendencia Nacional de seguros
     const IVA_FEE = 0.21; // Impuesto IVA 21%
 
-    premium = (totalPrime + (totalPrime * COMPANY_FEE));
+    let premium = (totalPrime + (totalPrime * COMPANY_FEE));
     premium += premium * SSN_FEE;
     premium += premium * IVA_FEE;
 

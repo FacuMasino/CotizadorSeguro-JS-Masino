@@ -112,7 +112,7 @@ function renderQuotation(quotation, coverages) {
 Pero estos tienen las clases placeholder-glow y placeholder de bootstrap
 Que crean una animación simulando la carga de datos */
 function renderLoadingQuotation() {
-    let htmlQuotationData = `
+    const htmlQuotationData = `
     <div class="col-sm-4 col-12 placeholder-glow border rounded-start m-1 p-3">
         <p class="m-0 placeholder-glow">
             <span class="placeholder col-3"></span>
@@ -125,7 +125,7 @@ function renderLoadingQuotation() {
     </div>
     `.repeat(3); // repite la cadena 3 veces.
 
-    let htmlProductList = `
+    const htmlProductList = `
     <div class="d-flex align-items-center border-top border-bottom border-dark p-2">
         <div class="col-sm-8 col-12">
             <p class="m-0 placeholder-glow">
