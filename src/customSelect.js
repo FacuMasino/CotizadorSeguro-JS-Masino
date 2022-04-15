@@ -149,8 +149,3 @@ class CustomSelect {
         }
     }
 }
-
-/* const brandsSelect = new CustomSelect('brandSelect');
-brandsSelect.isLoading(true);
-brandsSelect.createItems([{key:0, name:'Ford'},{key:1,name:'Audi'},{key:2,name:'Fiat'},{key:3,name:'Chevrolet'},{key:4,name:'Volkswagen'}]);
-setTimeout(()=>brandsSelect.isLoading(false),4000); */
